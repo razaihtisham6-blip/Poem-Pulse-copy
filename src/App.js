@@ -1,6 +1,7 @@
 import './App.css';
 import { useState } from 'react';
 import LoadingScreen from './LoadingScreen';
+import ResultsPage from './ResultsPage';
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -73,8 +74,22 @@ function App() {
     setCurrentScreen('homepage');
   };
 
+  const handleLoadingComplete = () => {
+    console.log('Loading completed - navigating to results');
+    setCurrentScreen('results');
+  };
+
+  const handleBackToHome = () => {
+    console.log('Back to home clicked - returning to homepage');
+    setCurrentScreen('homepage');
+  };
+
   if (currentScreen === 'loading') {
-    return <LoadingScreen onCancel={handleCancel} />;
+    return <LoadingScreen onCancel={handleCancel} onComplete={handleLoadingComplete} />;
+  }
+
+  if (currentScreen === 'results') {
+    return <ResultsPage onBack={handleBackToHome} />;
   }
 
   return (
