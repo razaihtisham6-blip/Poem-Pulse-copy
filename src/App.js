@@ -6,6 +6,7 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [currentScreen, setCurrentScreen] = useState('homepage');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -16,10 +17,11 @@ function App() {
       
       if (allowedTypes.includes(fileExtension)) {
         setSelectedFile(file);
+        setErrorMessage(''); // Clear any previous error
         console.log('File selected:', file.name, 'Size:', file.size, 'bytes');
         // Handle file processing here
       } else {
-        alert('Please select a valid file type (.txt, .doc, or .docx)');
+        setErrorMessage('Please select a valid file type (.txt, .doc, or .docx)');
         event.target.value = ''; // Clear the input
       }
     }
@@ -47,20 +49,22 @@ function App() {
       
       if (allowedTypes.includes(fileExtension)) {
         setSelectedFile(file);
+        setErrorMessage(''); // Clear any previous error
         console.log('File dropped:', file.name, 'Size:', file.size, 'bytes');
         // Handle file processing here
       } else {
-        alert('Please drop a valid file type (.txt, .doc, or .docx)');
+        setErrorMessage('Please drop a valid file type (.txt, .doc, or .docx)');
       }
     }
   };
 
   const handleNext = () => {
     if (selectedFile) {
+      setErrorMessage(''); // Clear any previous error
       console.log('Next button clicked - navigating to loading screen');
       setCurrentScreen('loading');
     } else {
-      alert('Please select a file first');
+      setErrorMessage('Please select a file before proceeding');
     }
   };
 
@@ -95,7 +99,10 @@ function App() {
               <p className="file-size">{(selectedFile.size / 1024).toFixed(1)} KB</p>
               <button 
                 className="remove-file"
-                onClick={() => setSelectedFile(null)}
+                onClick={() => {
+                  setSelectedFile(null);
+                  setErrorMessage(''); // Clear any error when removing file
+                }}
               >
                 Remove
               </button>
@@ -116,6 +123,12 @@ function App() {
             </>
           )}
         </div>
+
+        {errorMessage && (
+          <div className="error-message">
+            {errorMessage}
+          </div>
+        )}
 
         <button className="next-button" onClick={handleNext}>
           Next
