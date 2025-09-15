@@ -1,6 +1,17 @@
 import './LoadingScreen.css';
+import { useEffect } from 'react';
 
-function LoadingScreen({ onCancel }) {
+function LoadingScreen({ onCancel, onComplete }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (onComplete) {
+        onComplete();
+      }
+    }, 10000); // 10 seconds
+
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
   return (
     <div className="loading-container">
       <div className="loading-content">
