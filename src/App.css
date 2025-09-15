@@ -1,0 +1,158 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.App {
+  min-height: 100vh;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.container {
+  max-width: 600px;
+  width: 100%;
+  border: 2px solid black;
+  padding: 40px;
+  text-align: center;
+  background-color: white;
+}
+
+.title {
+  font-family: 'Times New Roman', serif;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: black;
+}
+
+.tagline {
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  color: black;
+  font-weight: 400;
+}
+
+.description {
+  margin-bottom: 40px;
+}
+
+.description p {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: black;
+}
+
+.upload-area {
+  border: 2px dashed #ccc;
+  padding: 40px 20px;
+  margin-bottom: 30px;
+  background-color: #fafafa;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.upload-area:hover {
+  background-color: #f0f0f0;
+}
+
+.upload-area.drag-over {
+  background-color: #e8f4fd;
+  border-color: #007bff;
+}
+
+.upload-area.file-selected {
+  background-color: #f8f9fa;
+  border-color: #28a745;
+}
+
+.upload-area p {
+  margin-bottom: 15px;
+  color: #666;
+  font-size: 1rem;
+}
+
+.browse-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: black;
+  transition: background-color 0.3s ease;
+}
+
+.browse-button:hover {
+  background-color: #e0e0e0;
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.file-name {
+  font-weight: bold;
+  color: #28a745;
+  margin-bottom: 5px;
+}
+
+.file-size {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+
+.remove-file {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.remove-file:hover {
+  background-color: #c82333;
+}
+
+.next-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  float: right;
+}
+
+.next-button:hover {
+  background-color: #0056b3;
+}
+
+/* Clear float */
+.container::after {
+  content: "";
+  display: table;
+  clear: both;
+}
