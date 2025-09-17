@@ -10,6 +10,7 @@ function App() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [currentScreen, setCurrentScreen] = useState('homepage');
   const [errorMessage, setErrorMessage] = useState('');
+  const [analysisResult, setAnalysisResult] = useState('');
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -99,11 +100,11 @@ function App() {
   };
 
   if (currentScreen === 'loading') {
-    return <LoadingScreen onCancel={handleCancel} onComplete={handleLoadingComplete} />;
+    return <LoadingScreen onCancel={handleCancel} onComplete={handleLoadingComplete} setAnalysisResult={setAnalysisResult} selectedFile={selectedFile} />;
   }
 
   if (currentScreen === 'results') {
-    return <ResultsPage onNext={handleNextToExit} />;
+    return <ResultsPage onNext={handleNextToExit} resultText={analysisResult} />;
   }
 
   if (currentScreen === 'exit') {

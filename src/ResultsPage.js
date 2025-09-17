@@ -1,6 +1,6 @@
 import './ResultsPage.css';
 
-function ResultsPage({ onNext }) {
+function ResultsPage({ onNext, resultText }) {
   return (
     <div className="results-container">
       <div className="results-content">
@@ -12,7 +12,7 @@ function ResultsPage({ onNext }) {
             <h2 className="panel-title">Keyness Statistics</h2>
             <div className="panel-content">
               <div className="placeholder-content">
-                <p>Results coming soon...</p>
+                <p>{resultText ? resultText : 'Results coming soon...'}</p>
               </div>
             </div>
           </div>
