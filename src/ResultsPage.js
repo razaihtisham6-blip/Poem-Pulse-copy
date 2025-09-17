@@ -1,6 +1,6 @@
 import './ResultsPage.css';
 
-function ResultsPage({ onBack }) {
+function ResultsPage({ onNext }) {
   return (
     <div className="results-container">
       <div className="results-content">
@@ -49,8 +49,8 @@ function ResultsPage({ onBack }) {
         </div>
 
         <div className="results-actions">
-          <button className="back-button" onClick={onBack}>
-            Back to Home
+          <button className="next-button" onClick={onNext}>
+            Next
           </button>
         </div>
       </div>

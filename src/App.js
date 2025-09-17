@@ -2,6 +2,8 @@ import './App.css';
 import { useState } from 'react';
 import LoadingScreen from './LoadingScreen';
 import ResultsPage from './ResultsPage';
+import ExitPage from './ExitPage';
+import ThankYouPage from './ThankYouPage';
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -79,9 +81,21 @@ function App() {
     setCurrentScreen('results');
   };
 
-  const handleBackToHome = () => {
-    console.log('Back to home clicked - returning to homepage');
+  const handleNextToExit = () => {
+    console.log('Next button clicked - navigating to exit page');
+    setCurrentScreen('exit');
+  };
+
+  const handleUploadAnother = () => {
+    console.log('Upload another clicked - returning to homepage');
+    setSelectedFile(null);
+    setErrorMessage('');
     setCurrentScreen('homepage');
+  };
+
+  const handleExit = () => {
+    console.log('Exit clicked - navigating to thank you page');
+    setCurrentScreen('thankyou');
   };
 
   if (currentScreen === 'loading') {
@@ -89,7 +103,15 @@ function App() {
   }
 
   if (currentScreen === 'results') {
-    return <ResultsPage onBack={handleBackToHome} />;
+    return <ResultsPage onNext={handleNextToExit} />;
+  }
+
+  if (currentScreen === 'exit') {
+    return <ExitPage onUploadAnother={handleUploadAnother} onExit={handleExit} />;
+  }
+
+  if (currentScreen === 'thankyou') {
+    return <ThankYouPage />;
   }
 
   return (

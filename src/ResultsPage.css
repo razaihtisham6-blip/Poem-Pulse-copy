@@ -76,7 +76,7 @@
   margin-top: 20px;
 }
 
-.back-button {
+.next-button {
   background-color: #2196f3;
   color: white;
   border: none;
@@ -88,11 +88,11 @@
   transition: background-color 0.3s ease;
 }
 
-.back-button:hover {
+.next-button:hover {
   background-color: #1976d2;
 }
 
-.back-button:active {
+.next-button:active {
   background-color: #1565c0;
 }
 
