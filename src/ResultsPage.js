@@ -1,6 +1,16 @@
 import './ResultsPage.css';
+//import React from "react";
 
-function ResultsPage({ onNext, resultText }) {
+function ResultsPage({ results, onBack }) {
+  if (!results) return <p>No results recieved.</p>;
+
+  const rating = results.ratings;
+  const pic = results.cluster;
+
+  console.log("Base64 str len", results.cluster.plot?.length);
+  console.log("Preview", results.cluster.plot?.slice(0, 50));
+
+
   return (
     <div className="results-container">
       <div className="results-content">
@@ -12,7 +22,17 @@ function ResultsPage({ onNext, resultText }) {
             <h2 className="panel-title">Keyness Statistics</h2>
             <div className="panel-content">
               <div className="placeholder-content">
-                <p>{resultText ? resultText : 'Results coming soon...'}</p>
+                {rating ? (
+                  <ul>
+                    {Object.entries(rating).map(([key, val]) => (
+                      <li key={key}>
+                        {key}: {JSON.stringify(val)}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No stats found</p>
+                )}
               </div>
             </div>
           </div>
@@ -22,7 +42,12 @@ function ResultsPage({ onNext, resultText }) {
             <h2 className="panel-title">Semantic Clustering</h2>
             <div className="panel-content">
               <div className="placeholder-content">
-                <p>Results coming soon...</p>
+                {pic.plot && (
+                  <img
+                    src={`data:image/png;base64,${pic.plot}`}
+                    alt="cluster"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -49,8 +74,8 @@ function ResultsPage({ onNext, resultText }) {
         </div>
 
         <div className="results-actions">
-          <button className="next-button" onClick={onNext}>
-            Next
+          <button className="back-button" onClick={onBack}>
+            Back to Home
           </button>
         </div>
       </div>

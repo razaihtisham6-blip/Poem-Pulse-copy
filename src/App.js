@@ -1,16 +1,16 @@
 import './App.css';
 import { useState } from 'react';
+import { analyzeFile } from "./test";
 import LoadingScreen from './LoadingScreen';
 import ResultsPage from './ResultsPage';
-import ExitPage from './ExitPage';
-import ThankYouPage from './ThankYouPage';
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [currentScreen, setCurrentScreen] = useState('homepage');
   const [errorMessage, setErrorMessage] = useState('');
-  const [analysisResult, setAnalysisResult] = useState('');
+
+  const [results, setResults] = useState(null);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -24,6 +24,13 @@ function App() {
         setErrorMessage(''); // Clear any previous error
         console.log('File selected:', file.name, 'Size:', file.size, 'bytes');
         // Handle file processing here
+
+        analyzeFile(file)
+          .then((data) => {
+            setResults(data);
+          })
+          .catch((err) => console.error("Upload failed:", err));
+
       } else {
         setErrorMessage('Please select a valid file type (.txt, .doc, or .docx)');
         event.target.value = ''; // Clear the input
@@ -82,37 +89,19 @@ function App() {
     setCurrentScreen('results');
   };
 
-  const handleNextToExit = () => {
-    console.log('Next button clicked - navigating to exit page');
-    setCurrentScreen('exit');
-  };
-
-  const handleUploadAnother = () => {
-    console.log('Upload another clicked - returning to homepage');
-    setSelectedFile(null);
-    setErrorMessage('');
+  const handleBackToHome = () => {
+    console.log('Back to home clicked - returning to homepage');
     setCurrentScreen('homepage');
   };
 
-  const handleExit = () => {
-    console.log('Exit clicked - navigating to thank you page');
-    setCurrentScreen('thankyou');
-  };
-
   if (currentScreen === 'loading') {
-    return <LoadingScreen onCancel={handleCancel} onComplete={handleLoadingComplete} setAnalysisResult={setAnalysisResult} selectedFile={selectedFile} />;
+    return <LoadingScreen onCancel={handleCancel} onComplete={handleLoadingComplete} />;
   }
 
   if (currentScreen === 'results') {
-    return <ResultsPage onNext={handleNextToExit} resultText={analysisResult} />;
-  }
-
-  if (currentScreen === 'exit') {
-    return <ExitPage onUploadAnother={handleUploadAnother} onExit={handleExit} />;
-  }
-
-  if (currentScreen === 'thankyou') {
-    return <ThankYouPage />;
+    return <ResultsPage 
+      results={results}
+      onBack={handleBackToHome} />;
   }
 
   return (
