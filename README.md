@@ -29,6 +29,7 @@ A powerful poetry analysis web application that provides deep linguistic insight
 
 **Frontend (Node.js packages):**
 ```bash
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 npm install
 ```
 
