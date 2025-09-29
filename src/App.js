@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { analyzeFile } from "./test";
 import LoadingScreen from './LoadingScreen';
 import ResultsPage from './ResultsPage';
+import ExitPage from './ExitPage';
+import ThankYouPage from './ThankYouPage';
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -97,6 +99,29 @@ function App() {
     setCurrentScreen('homepage');
   };
 
+  const handleNextFromResults = () => {
+    console.log('Next from results clicked - going to exit page');
+    setCurrentScreen('exit');
+  };
+
+  const handleUploadAnother = () => {
+    console.log('Upload another clicked - returning to homepage');
+    setCurrentScreen('homepage');
+    setSelectedFile(null);
+    setResults(null);
+    setErrorMessage('');
+  };
+
+  const handleExit = () => {
+    console.log('Exit clicked - showing thank you page');
+    setCurrentScreen('thank-you');
+  };
+
+  const handleThankYouComplete = () => {
+    console.log('Thank You page complete - closing application');
+    window.close();
+  };
+
   if (currentScreen === 'loading') {
     return <LoadingScreen onCancel={handleCancel} />;
   }
@@ -104,7 +129,18 @@ function App() {
   if (currentScreen === 'results') {
     return <ResultsPage 
       results={results}
-      onBack={handleBackToHome} />;
+      onBack={handleNextFromResults} />;
+  }
+
+  if (currentScreen === 'exit') {
+    return <ExitPage 
+      results={results}
+      onUploadAnother={handleUploadAnother}
+      onExit={handleExit} />;
+  }
+
+  if (currentScreen === 'thank-you') {
+    return <ThankYouPage onComplete={handleThankYouComplete} />;
   }
 
   return (

@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import io
 import base64
+from docx import Document
 from keyness import relative_freq
 from clusters import word_cluster
 from sentiart import ratings
@@ -23,6 +24,43 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+def extract_text_from_file(file_content: bytes, filename: str) -> str:
+    """Extract text content from uploaded file based on its extension."""
+    file_extension = filename.lower().split('.')[-1]
+    
+    if file_extension == 'txt':
+        try:
+            # Try UTF-8 first
+            return file_content.decode('utf-8')
+        except UnicodeDecodeError:
+            try:
+                # Fallback to latin-1 if UTF-8 fails
+                return file_content.decode('latin-1')
+            except UnicodeDecodeError:
+                # Final fallback
+                return file_content.decode('utf-8', errors='ignore')
+    
+    elif file_extension in ['doc', 'docx']:
+        try:
+            # Save content to BytesIO for docx processing
+            doc_stream = io.BytesIO(file_content)
+            doc = Document(doc_stream)
+            
+            # Extract text from all paragraphs
+            text_content = []
+            for paragraph in doc.paragraphs:
+                text_content.append(paragraph.text)
+            
+            # Join all paragraphs with newlines
+            return '\n'.join(text_content)
+            
+        except Exception as e:
+            print(f"Error parsing Word document: {e}")
+            return ""
+    
+    else:
+        raise ValueError(f"Unsupported file format: {file_extension}")
+
 def tokenize(text):
     return [w.lower() for w in text.split()]
 
@@ -32,25 +70,62 @@ def home():
 
 @app.post("/analyse")
 async def analyse(file: UploadFile):
-    print("Recieved file: ", file.filename)
-    text = (await file.read()).decode("utf-8")
-    print("content len", len(text))
+    print("Received file: ", file.filename)
+    
+    # Validate file type
+    file_extension = file.filename.lower().split('.')[-1] if '.' in file.filename else ''
+    if file_extension not in ['txt', 'doc', 'docx']:
+        return JSONResponse(
+            content={"error": "Unsupported file format. Please upload a .txt, .doc, or .docx file."},
+            status_code=400
+        )
+    
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Extract text based on file type
+        text = extract_text_from_file(file_content, file.filename)
+        
+        if not text.strip():
+            return JSONResponse(
+                content={"error": "No readable text found in the uploaded file."},
+                status_code=400
+            )
+        
+        print("Content length:", len(text))
+        print("First 100 chars:", text[:100])
+        
+        text_processed = tokenize(text)
 
-    text_processed = tokenize(text)
+        #keyness statistic
+        freq = relative_freq(text_processed)
 
-    #keyness statistic
-    freq = relative_freq(text_processed)
+        #word cluster
+        custer_img = word_cluster(text_processed)
 
-    #word cluster
-    custer_img = word_cluster(text_processed)
+        #sentiart sentiment ratings
+        rating = ratings(text_processed)
 
-    #sentiart sentiment ratings
-    rating = ratings(text_processed)
+        #sensorimotor norms
+        sensor = sensory_norm(text_processed)
 
-    #sensorimotor norms
-    sensor = sensory_norm(text_processed)
+        print("Clustering image length:", len(custer_img))
+        print("Clustering preview:", custer_img[:50])
 
-    print("test1", len(custer_img))
-    print("Preview:", custer_img[:50])
-
-    return JSONResponse(content = {"relative frequency": freq, "cluster": custer_img, "ratings": rating, "sensorimotor": sensor})
+        # Organize cluster data properly
+        cluster_data = {"plot": custer_img}
+        
+        return JSONResponse(content = {
+            "relative_frequency": freq, 
+            "cluster": cluster_data, 
+            "ratings": rating, 
+            "sensorimotor": sensor
+        })
+    
+    except Exception as e:
+        print(f"Error processing file: {e}")
+        return JSONResponse(
+            content={"error": f"Failed to process file: {str(e)}"},
+            status_code=500
+        )

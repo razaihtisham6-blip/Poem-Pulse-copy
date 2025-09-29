@@ -50,10 +50,12 @@
 }
 
 .panel-content {
-  height: 200px;
+  height: 300px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow-y: auto;
+  padding: 10px;
 }
 
 .placeholder-content {
@@ -76,8 +78,8 @@
   margin-top: 20px;
 }
 
-.back-button {
-  background-color: #2196f3;
+.next-button {
+  background-color: #4caf50;
   color: white;
   border: none;
   padding: 12px 30px;
@@ -88,12 +90,183 @@
   transition: background-color 0.3s ease;
 }
 
-.back-button:hover {
-  background-color: #1976d2;
+.next-button:hover {
+  background-color: #45a049;
 }
 
-.back-button:active {
-  background-color: #1565c0;
+.next-button:active {
+  background-color: #3d903d;
+}
+
+/* Data-specific styling */
+.frequency-list {
+  width: 100%;
+}
+
+.frequency-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.frequency-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.frequency-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin: 5px 0;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #2196f3;
+}
+
+.frequency-item .word {
+  font-weight: 500;
+  color: #333;
+}
+
+.frequency-item .frequency {
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.cluster-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sentiment-analysis {
+  width: 100%;
+}
+
+.sentiment-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.sentiment-summary {
+  background-color: #f0f8ff;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #e3f2fd;
+}
+
+.sentiment-stats {
+  margin: 0;
+}
+
+.sentiment-stats p {
+  margin: 5px 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.sentiment-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sentiment-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin: 5px 0;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.sentiment-item .word {
+  font-weight: 500;
+  color: #333;
+}
+
+.sentiment-score {
+  font-weight: 600;
+}
+
+.sentiment-score.positive {
+  color: #4caf50;
+}
+
+.sentiment-score.negative {
+  color: #f44336;
+}
+
+.sentiment-score.neutral {
+  color: #757575;
+}
+
+.sensorimotor-analysis {
+  width: 100%;
+}
+
+.sensorimotor-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 15px;
+  font-weight: 500;
+}
+
+.sensorimotor-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sensorimotor-item {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+}
+
+.norms-word {
+  margin: 0 0 10px 0;
+  font-size: 1rem;
+  color: #333;
+  font-weight: 600;
+  border-bottom: 2px solid #2196f3;
+  padding-bottom: 5px;
+}
+
+.norms-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+.norm-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  background-color: white;
+  border-radius: 4px;
+  margin: 2px 0;
+}
+
+.norm-label {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.norm-value {
+  font-size: 0.85rem;
+  color: #333;
+  font-weight: 600;
 }
 
 /* Responsive design */
@@ -109,5 +282,13 @@
   
   .results-title {
     font-size: 2rem;
+  }
+
+  .panel-content {
+    height: 250px;
+  }
+
+  .norms-details {
+    grid-template-columns: 1fr;
   }
 }

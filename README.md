@@ -8,13 +8,13 @@ A powerful poetry analysis web application that provides deep linguistic insight
 - **🎯 Semantic Clustering** - Word clustering with visualization using GloVe embeddings
 - **❤️ Sentiment Analysis** - Emotion and sentiment scoring
 - **🧠 Sensory-Motor Analysis** - Lancaster sensorimotor norms processing
-- **📁 File Upload** - Support for text file uploads (TXT format)
+- **📁 File Upload** - Support for text file uploads (TXT, DOC, DOCX formats)
 
 ## TechnologyStack
 
 - **Frontend**: React.js with Create React App
 - **Backend**: FastAPI (Python)
-- **Analysis**: SciKit-Learn, Gensim, pandas, numpy
+- **Analysis**: SciKit-Learn, Gensim, pandas, numpy, python-docx
 - **Visualization**: Matplotlib
 - **Communication**: RESTful API with CORS
 
@@ -35,7 +35,7 @@ npm install
 **Backend (Python packages):**
 ```bash
 cd backend
-pip install fastapi uvicorn scikit-learn gensim matplotlib pandas numpy
+pip install fastapi uvicorn scikit-learn gensim matplotlib pandas numpy python-docx
 cd ..
 ```
 
@@ -102,6 +102,7 @@ gensim>=4.0.0
 matplotlib>=3.5.0
 pandas>=1.3.0
 numpy>=1.21.0
+python-docx>=0.8.11
 ```
 
 ## File Structure
@@ -150,9 +151,9 @@ Poem-Pulse/
 - Check React scripts: react-scripts should be installed
 
 **File Upload Issues:**
-- Supported format: Plain text files (.txt)
-- Check file encoding (UTF-8 recommended)
-- Maximum recommended size: 10MB
+- Supported formats: Plain text files (.txt), Word documents (.doc, .docx)
+- Check file encoding (UTF-8 recommended for .txt files)
+- Maximum recommended size: 10MB for all formats
 
 ## Development
 
