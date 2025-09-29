@@ -9,7 +9,7 @@ function App() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [currentScreen, setCurrentScreen] = useState('homepage');
   const [errorMessage, setErrorMessage] = useState('');
-
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
 
   const handleFileUpload = (event) => {
@@ -23,14 +23,6 @@ function App() {
         setSelectedFile(file);
         setErrorMessage(''); // Clear any previous error
         console.log('File selected:', file.name, 'Size:', file.size, 'bytes');
-        // Handle file processing here
-
-        analyzeFile(file)
-          .then((data) => {
-            setResults(data);
-          })
-          .catch((err) => console.error("Upload failed:", err));
-
       } else {
         setErrorMessage('Please select a valid file type (.txt, .doc, or .docx)');
         event.target.value = ''; // Clear the input
@@ -62,7 +54,6 @@ function App() {
         setSelectedFile(file);
         setErrorMessage(''); // Clear any previous error
         console.log('File dropped:', file.name, 'Size:', file.size, 'bytes');
-        // Handle file processing here
       } else {
         setErrorMessage('Please drop a valid file type (.txt, .doc, or .docx)');
       }
@@ -70,23 +61,35 @@ function App() {
   };
 
   const handleNext = () => {
-    if (selectedFile) {
+    if (selectedFile && !isAnalyzing) {
       setErrorMessage(''); // Clear any previous error
-      console.log('Next button clicked - navigating to loading screen');
+      console.log('Next button clicked - starting analysis');
+      setIsAnalyzing(true);
       setCurrentScreen('loading');
-    } else {
+      
+      // Start the actual file analysis
+      analyzeFile(selectedFile)
+        .then((data) => {
+          console.log('Analysis completed:', data);
+          setResults(data);
+          setIsAnalyzing(false);
+          setCurrentScreen('results');
+        })
+        .catch((err) => {
+          console.error("Analysis failed:", err);
+          setErrorMessage('Analysis failed. Please try again.');
+          setIsAnalyzing(false);
+          setCurrentScreen('homepage');
+        });
+    } else if (!selectedFile) {
       setErrorMessage('Please select a file before proceeding');
     }
   };
 
   const handleCancel = () => {
     console.log('Cancel button clicked - returning to homepage');
+    setIsAnalyzing(false);
     setCurrentScreen('homepage');
-  };
-
-  const handleLoadingComplete = () => {
-    console.log('Loading completed - navigating to results');
-    setCurrentScreen('results');
   };
 
   const handleBackToHome = () => {
@@ -95,7 +98,7 @@ function App() {
   };
 
   if (currentScreen === 'loading') {
-    return <LoadingScreen onCancel={handleCancel} onComplete={handleLoadingComplete} />;
+    return <LoadingScreen onCancel={handleCancel} />;
   }
 
   if (currentScreen === 'results') {
@@ -157,8 +160,12 @@ function App() {
           </div>
         )}
 
-        <button className="next-button" onClick={handleNext}>
-          Next
+        <button 
+          className="next-button" 
+          onClick={handleNext}
+          disabled={!selectedFile || isAnalyzing}
+        >
+          {isAnalyzing ? 'Analyzing...' : 'Next'}
         </button>
       </div>
     </div>
