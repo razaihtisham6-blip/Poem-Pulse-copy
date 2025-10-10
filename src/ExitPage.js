@@ -154,13 +154,15 @@ function ExitPage({ results, onUploadAnother, onExit }) {
         <p className="deletion-message">Your File Has been Deleted</p>
 
         <div className="exit-actions">
-          <button className="action-link upload-another" onClick={onUploadAnother}>
+          <button className="action-button upload-another" onClick={onUploadAnother}>
             Upload Another Text
           </button>
-          <button className="action-link exit" onClick={onExit}>
-            Exit
-          </button>
         </div>
+        
+        {/* Exit button positioned in bottom right corner */}
+        <button className="exit-button" onClick={onExit}>
+          Exit
+        </button>
       </div>
     </div>
   );

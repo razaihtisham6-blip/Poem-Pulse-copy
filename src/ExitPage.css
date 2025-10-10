@@ -71,43 +71,65 @@
 
 .exit-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   margin-top: 30px;
 }
 
-.action-link {
-  background: none;
-  border: none;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 8px 16px;
-  transition: color 0.3s ease;
-}
-
-.action-link.upload-another {
+.action-button {
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+  border: 1px solid var(--accent);
   color: var(--accent);
-  float: left;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 12px 24px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.action-link.upload-another:hover {
+.action-button:hover {
+  background: linear-gradient(180deg, rgba(103, 232, 249, 0.15), rgba(103, 232, 249, 0.08));
   color: #67e8f9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(103, 232, 249, 0.3);
+  border-color: #67e8f9;
 }
 
-.action-link.exit {
-  color: #ef4444;
-  float: right;
+.action-button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.action-link.exit:hover {
-  color: #f87171;
+/* Exit button positioned in bottom right corner */
+.exit-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.8));
+  border: 1px solid #ef4444;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 12px 24px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+  z-index: 1000;
 }
 
-.exit-actions::after {
-  content: "";
-  display: table;
-  clear: both;
+.exit-button:hover {
+  background: linear-gradient(180deg, rgba(248, 113, 113, 0.95), rgba(239, 68, 68, 0.9));
+  border-color: #f87171;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(248, 113, 113, 0.5);
+}
+
+.exit-button:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
 }
 
 /* Responsive design */
@@ -121,13 +143,18 @@
   }
   
   .exit-actions {
-    flex-direction: column;
-    gap: 20px;
+    justify-content: center;
   }
   
-  .action-link.upload-another,
-  .action-link.exit {
-    float: none;
-    display: block;
+  .action-button {
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  .exit-button {
+    bottom: 16px;
+    right: 16px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
   }
 }
