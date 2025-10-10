@@ -47,9 +47,22 @@ app.post('/api/analyze', async (req, res) => {
   }
 });
 
+// Shutdown endpoint
+app.post('/api/shutdown', (req, res) => {
+  console.log('Received shutdown request');
+  res.json({ message: 'Shutting down server...' });
+  
+  // Close the server gracefully
+  setTimeout(() => {
+    console.log('Server shutting down...');
+    process.exit(0);
+  }, 1000); // Give time for response to be sent
+});
+
 const PORT = 3001;
 const HOST = '127.0.0.1'; // Bind to localhost only (no LAN exposure)
-http.createServer(app).listen(PORT, HOST, () => {
+const server = http.createServer(app);
+server.listen(PORT, HOST, () => {
   console.log(`API listening on http://${HOST}:${PORT}`);
 });
 

@@ -157,12 +157,10 @@ function ExitPage({ results, onUploadAnother, onExit }) {
           <button className="action-button upload-another" onClick={onUploadAnother}>
             Upload Another Text
           </button>
+          <button className="action-button danger" onClick={onExit}>
+            Exit
+          </button>
         </div>
-        
-        {/* Exit button positioned in bottom right corner */}
-        <button className="exit-button" onClick={onExit}>
-          Exit
-        </button>
       </div>
     </div>
   );
