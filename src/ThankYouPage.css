@@ -1,21 +1,21 @@
 .thank-you-container {
   min-height: 100vh;
-  background-color: white;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 24px;
 }
 
 .thank-you-content {
-  max-width: 500px;
+  max-width: 560px;
   width: 100%;
-  background-color: white;
-  border: 1px solid #e3f2fd;
-  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid var(--border);
+  border-radius: 16px;
   padding: 40px;
   text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
 }
 
 .thank-you-message {
@@ -26,9 +26,9 @@
 
 .thank-you-text {
   font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 40px;
-  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 28px;
+  font-weight: 500;
   letter-spacing: 0.02em;
 }
 
@@ -44,7 +44,7 @@
 }
 
 .logo-svg {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.35));
 }
 
 .brand-text {
@@ -53,18 +53,18 @@
 
 .brand-name {
   font-size: 1.8rem;
-  font-weight: bold;
-  color: #333;
+  font-weight: 800;
+  color: var(--text);
   margin: 0;
   letter-spacing: 0.05em;
 }
 
 .tagline {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-style: italic;
-  color: #666;
-  margin: 5px 0 0 0;
-  font-weight: 300;
+  color: var(--muted);
+  margin: 6px 0 0 0;
+  font-weight: 400;
 }
 
 /* Animation for the thank you text */

@@ -1,3 +1,20 @@
+:root {
+  --bg: #0b0f1a;
+  --bg-soft: #0f1524;
+  --card: #111827;
+  --elevated: #0b1220;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --primary: #7c3aed;
+  --primary-600: #6d28d9;
+  --primary-700: #5b21b6;
+  --accent: #22d3ee;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --border: rgba(255,255,255,0.09);
+  --shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,9 +22,28 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: var(--text);
+  background: radial-gradient(1200px 800px at 10% 10%, rgba(124,58,237,0.15), transparent 60%),
+              radial-gradient(1000px 700px at 90% 20%, rgba(34,211,238,0.12), transparent 55%),
+              linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Shared buttons and focus outlines */
+button, .browse-button, .next-button, .download-results-btn, .action-link, .cancel-button {
+  outline: none;
+}
+
+button:focus-visible,
+.browse-button:focus-visible,
+.next-button:focus-visible,
+.download-results-btn:focus-visible,
+.action-link:focus-visible,
+.cancel-button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(34,211,238,0.35);
+  border-radius: 8px;
 }
