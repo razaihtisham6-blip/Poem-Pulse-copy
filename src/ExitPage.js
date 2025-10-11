@@ -1,4 +1,7 @@
+// ExitPage.js
 import './ExitPage.css';
+// ADDED: jsPDF for embedding the cluster image into the PDF
+import jsPDF from 'jspdf';
 
 function ExitPage({ results, onUploadAnother, onExit }) {
   const generateSummaryText = () => {
@@ -80,52 +83,119 @@ function ExitPage({ results, onUploadAnother, onExit }) {
     }
     
     else if (format === 'pdf') {
-      // For PDF generation, we'll use a simple approach
-      const printWindow = window.open('', '_blank');
-      const content = `
-        <html>
-          <head><title>Poem Pulse Analysis</title></head>
-          <body style="font-family: Arial, sans-serif; padding: 20px;">
-            <h1>POEM PULSE ANALYSIS RESULTS</h1>
-            <p><strong>Generated:</strong> ${new Date().toLocaleDateString()}</p>
-            
-            <h2>SUMMARY</h2>
-            <p>${generateSummaryText()}</p>
-            
-            ${results.relative_frequency ? `
-            <h2>WORD FREQUENCY ANALYSIS</h2>
-            <ul>
-              ${Object.entries(results.relative_frequency).slice(0, 20).map(([word, freq]) => 
-                `<li><strong>${word}:</strong> ${(freq * 100).toFixed(2)}%</li>`
-              ).join('')}
-            </ul>
-            ` : ''}
-            
-            ${results.ratings ? `
-            <h2>SENTIMENT ANALYSIS</h2>
-            <p><strong>Overall Sentiment:</strong> ${Object.values(results.ratings).reduce((sum, score) => sum + (score || 0), 0) / Object.keys(results.ratings).length > 0 ? 'Positive' : 'Negative'}</p>
-            <ul>
-              ${Object.entries(results.ratings).filter(([word, score]) => score !== null).slice(0, 15).map(([word, score]) => 
-                `<li><strong>${word}:</strong> ${score.toFixed(3)}</li>`
-              ).join('')}
-            </ul>
-            ` : ''}
-            
-            ${results.sensorimotor ? `
-            <h2>SENSORIMOTOR ANALYSIS</h2>
-            ${Object.entries(results.sensorimotor).slice(0, 3).map(([word, norms]) => 
-              norms ? `<h3>${word}</h3><ul>${Object.entries(norms).slice(1, 6).map(([key, value]) => 
-                `<li><strong>${key.replace(/_/g, ' ')}:</strong> ${typeof value === 'number' ? value.toFixed(2) : value}</li>`
-              ).join('')}</ul>` : ''
-            ).join('')}
-            ` : ''}
-          </body>
-        </html>
-      `;
-      
-      printWindow.document.write(content);
-      printWindow.document.close();
-      printWindow.print();
+      // CHANGED: generate a PDF with jsPDF and embed the base64 plot image
+      const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const margin = 40;
+      let y = margin;
+
+      // Title
+      doc.setFontSize(18);
+      doc.text('POEM PULSE ANALYSIS RESULTS', margin, y);
+      y += 24;
+
+      // Generated date
+      doc.setFontSize(11);
+      doc.text(`Generated: ${new Date().toLocaleDateString()}`, margin, y);
+      y += 20;
+
+      // Summary
+      doc.setFontSize(14);
+      doc.text('SUMMARY', margin, y); y += 16;
+      doc.setFontSize(11);
+      const summary = generateSummaryText();
+      const wrappedSummary = doc.splitTextToSize(summary, pageW - margin * 2);
+      doc.text(wrappedSummary, margin, y);
+      y += wrappedSummary.length * 14 + 8;
+
+      // Semantic Clustering Visualization (image)
+      doc.setFontSize(14);
+      doc.text('SEMANTIC CLUSTERING VISUALIZATION', margin, y); y += 12;
+
+      const plotB64 = results?.cluster?.plot || '';
+      const imgData = plotB64.startsWith('data:image')
+        ? plotB64
+        : (plotB64 ? `data:image/png;base64,${plotB64}` : '');
+
+      if (imgData) {
+        try {
+          const { width, height } = doc.getImageProperties(imgData);
+          const targetW = pageW - margin * 2;
+          const targetH = (height * targetW) / width;
+
+          // page break if needed
+          if (y + targetH > pageH - margin) { doc.addPage(); y = margin; }
+
+          doc.addImage(imgData, 'PNG', margin, y, targetW, targetH, undefined, 'FAST');
+          y += targetH + 14;
+        } catch (e) {
+          doc.setFontSize(11);
+          doc.text('(plot unavailable)', margin, y); y += 14;
+        }
+      } else {
+        doc.setFontSize(11);
+        doc.text('(plot unavailable)', margin, y); y += 14;
+      }
+
+      // Word Frequency (top 20)
+      if (results.relative_frequency) {
+        if (y > pageH - margin - 160) { doc.addPage(); y = margin; }
+        doc.setFontSize(14);
+        doc.text('WORD FREQUENCY ANALYSIS (Top 20)', margin, y); y += 14;
+        doc.setFontSize(11);
+        const lines = Object.entries(results.relative_frequency)
+          .slice(0, 20)
+          .map(([w, f]) => `${w}: ${(f * 100).toFixed(2)}%`);
+        const wrapped = doc.splitTextToSize(lines.join('\n'), pageW - margin * 2);
+        doc.text(wrapped, margin, y);
+        y += wrapped.length * 12 + 8;
+      }
+
+      // Sentiment
+      if (results.ratings) {
+        if (y > pageH - margin - 180) { doc.addPage(); y = margin; }
+        doc.setFontSize(14);
+        doc.text('SENTIMENT ANALYSIS', margin, y); y += 14;
+        doc.setFontSize(11);
+        const valid = Object.entries(results.ratings).filter(([_, s]) => s !== null);
+        if (valid.length) {
+          const avg = valid.reduce((sum, [_, s]) => sum + s, 0) / valid.length;
+          const overall = avg > 0 ? 'Positive' : avg < 0 ? 'Negative' : 'Neutral';
+          doc.text(`Overall Sentiment: ${overall}`, margin, y); y += 14;
+          const items = valid.slice(0, 15).map(([w, s]) => `${w}: ${s.toFixed(3)}`);
+          const block = doc.splitTextToSize(items.join('\n'), pageW - margin * 2);
+          doc.text(block, margin, y);
+          y += block.length * 12 + 8;
+        } else {
+          doc.text('(no sentiment values)', margin, y); y += 14;
+        }
+      }
+
+      // Sensorimotor
+      if (results.sensorimotor) {
+        if (y > pageH - margin - 220) { doc.addPage(); y = margin; }
+        doc.setFontSize(14);
+        doc.text('SENSORIMOTOR ANALYSIS', margin, y); y += 14;
+        doc.setFontSize(11);
+        const topWords = Object.entries(results.sensorimotor).slice(0, 3);
+        if (topWords.length === 0) {
+          doc.text('(no sensorimotor values)', margin, y); y += 14;
+        } else {
+          for (const [word, norms] of topWords) {
+            if (!norms) continue;
+            if (y > pageH - margin - 120) { doc.addPage(); y = margin; }
+            doc.text(word, margin, y); y += 12;
+            const subset = Object.entries(norms).slice(1, 6)
+              .map(([k, v]) => `• ${k.replace(/_/g, ' ')}: ${typeof v === 'number' ? v.toFixed(2) : v}`);
+            const block = doc.splitTextToSize(subset.join('\n'), pageW - margin * 2);
+            doc.text(block, margin + 14, y);
+            y += block.length * 12 + 8;
+          }
+        }
+      }
+
+      doc.save(`poem-pulse-analysis-${timestamp}.pdf`);
     }
   };
 
@@ -138,7 +208,7 @@ function ExitPage({ results, onUploadAnother, onExit }) {
           <p className="reading-line">You might want to explore expanding</p>
           <p className="reading-line highlight">sensory diversity in your work</p>
         </div>
-
+        
         <div className="download-options">
           <button className="download-results-btn" onClick={() => downloadResults('pdf')}>
             Download PDF Report

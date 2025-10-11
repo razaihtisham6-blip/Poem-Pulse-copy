@@ -1,13 +1,19 @@
+# ----------------- ORIGINAL + MINIMAL EDITS -----------------
 from fastapi import FastAPI, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import io
-import base64
+# REMOVED (redundant/unused): import base64   # ← removed because it isn't used anywhere
+
 from docx import Document
 from keyness import relative_freq
 from clusters import word_cluster
 from sentiart import ratings
 from sensorimotor import sensory_norm
+
+# ===== ADDED: extra imports for the new raw-text endpoint and small helpers =====
+from pydantic import BaseModel  # ADDED
+# ===============================================================================
 
 app = FastAPI()
 
@@ -64,6 +70,19 @@ def extract_text_from_file(file_content: bytes, filename: str) -> str:
 def tokenize(text):
     return [w.lower() for w in text.split()]
 
+# ===== ADDED: tiny helper to strip UTF-8 BOM from some Windows-exported .txt files =====
+def _strip_utf8_bom(data: bytes) -> bytes:
+    """Remove UTF-8 BOM if present to avoid a weird first token."""
+    if data.startswith(b"\xef\xbb\xbf"):
+        return data[3:]
+    return data
+# =======================================================================================
+
+# ===== ADDED: schema for an alternate endpoint that accepts raw text (no file upload) ===
+class TextPayload(BaseModel):
+    text: str
+# =======================================================================================
+
 @app.get("/")
 def home():
     return {"message": "It works???"}
@@ -79,11 +98,24 @@ async def analyse(file: UploadFile):
             content={"error": "Unsupported file format. Please upload a .txt, .doc, or .docx file."},
             status_code=400
         )
-    
+
+    # ===== ADDED: guard because python-docx doesn't support legacy .doc =====
+    if file_extension == 'doc':
+        return JSONResponse(
+            content={"error": ".doc is not supported. Please upload a .txt or .docx file."},
+            status_code=400
+        )
+    # =======================================================================
+
     try:
         # Read file content
         file_content = await file.read()
-        
+
+        # ===== ADDED: strip BOM for .txt to keep your tokens clean ==========
+        if file_extension == 'txt':
+            file_content = _strip_utf8_bom(file_content)
+        # ===================================================================
+
         # Extract text based on file type
         text = extract_text_from_file(file_content, file.filename)
         
@@ -129,3 +161,40 @@ async def analyse(file: UploadFile):
             content={"error": f"Failed to process file: {str(e)}"},
             status_code=500
         )
+
+# ===== ADDED: alternate endpoint to analyse raw text directly (no file upload) =========
+@app.post("/analyse-text")
+async def analyse_text(payload: TextPayload):
+    try:
+        text = payload.text or ""
+        if not text.strip():
+            return JSONResponse(
+                content={"error": "No text provided."},
+                status_code=400
+            )
+
+        print("Content length (raw text):", len(text))
+        print("First 100 chars:", text[:100])
+
+        text_processed = tokenize(text)
+
+        freq = relative_freq(text_processed)
+        custer_img = word_cluster(text_processed)
+        rating = ratings(text_processed)
+        sensor = sensory_norm(text_processed)
+
+        cluster_data = {"plot": custer_img}
+
+        return JSONResponse(content={
+            "relative_frequency": freq,
+            "cluster": cluster_data,
+            "ratings": rating,
+            "sensorimotor": sensor
+        })
+    except Exception as e:
+        print(f"Error processing raw text: {e}")
+        return JSONResponse(
+            content={"error": f"Failed to process text: {str(e)}"},
+            status_code=500
+        )
+# =======================================================================================
