@@ -1,6 +1,9 @@
 import pandas as pd
+from pathlib import Path
 
-norms = pd.read_csv("Lancaster_sensorimotor_norms_for_39707_words.csv")
+_BASE_DIR = Path(__file__).resolve().parent
+_NORMS_PATH = _BASE_DIR / "Lancaster_sensorimotor_norms_for_39707_words.csv"
+norms = pd.read_csv(_NORMS_PATH)
 
 def get_norm(word):
     row = norms[norms['Word'] == word]

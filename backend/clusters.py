@@ -24,11 +24,14 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn.manifold import TSNE
 from sklearn.metrics import silhouette_score   # ADDED: for automatic K
-from nltk.corpus import stopwords
-from nltk import download, word_tokenize
+try:
+    from nltk.corpus import stopwords as nltk_stopwords
+except ImportError:  # NLTK not installed; we'll use a fallback set
+    nltk_stopwords = None
 
 # Embeddings
-import gensim.downloader as api
+from gensim.models import KeyedVectors
+from pathlib import Path
 
 # ---------------- Config ----------------
 PCA_COMPONENTS = 50
@@ -36,11 +39,14 @@ RANDOM_STATE   = 42
 
 # ADDED: cache model so repeated API calls don’t reload ~80MB every time
 _MODEL = None
+_BASE_DIR = Path(__file__).resolve().parent
+_MODEL_PATH = _BASE_DIR / "glove50.kv"
 
 def _get_model():
     global _MODEL
     if _MODEL is None:
-        _MODEL = api.load("glove-wiki-gigaword-100")  # 100-d GloVe
+        # Load local 50-d GloVe vectors shipped with the repo
+        _MODEL = KeyedVectors.load(str(_MODEL_PATH), mmap='r')
     return _MODEL
 
 # ADDED: robust token cleaner (keeps words with letters/' only)
@@ -70,7 +76,8 @@ def _choose_k_auto(X_reduced: np.ndarray, min_k: int = 10, max_k: int = 50, rand
 
     best_k, best_score = None, -1.0
     for k in candidates:
-        km = KMeans(n_clusters=k, n_init="auto", random_state=random_state)
+        # Use integer n_init for scikit-learn 1.3 compatibility
+        km = KMeans(n_clusters=k, n_init=10, random_state=random_state)
         labels = km.fit_predict(X_reduced)
         # Need at least 2 non-empty clusters
         if len(set(labels)) < 2 or len(set(labels)) >= n:
@@ -121,11 +128,14 @@ def word_cluster(tokens: list[str]) -> str:
     Build a t-SNE word cluster plot and return a base64 PNG string.
     Input is a list of tokens (already lowercased in your backend).
     """
-    # Safety downloads (no-op if already cached)
-    download("stopwords", quiet=True)
-    download("punkt", quiet=True)
-
-    stop = set(stopwords.words("english"))
+    # Stopwords: try NLTK if available, else a small built-in fallback list
+    fallback_stop = {
+        'a','an','and','the','is','are','was','were','be','been','being','to','of','in','that','it','for','on','with','as','by','at','from','or','this','but','not','have','has','had','do','does','did','so','if','then','than','too','very','can','will','just','over','also','such','into','its','their','there','here','we','you','he','she','they','i','me','my','our','your','his','her','their','them'
+    }
+    try:
+        stop = set(nltk_stopwords.words("english")) if nltk_stopwords else fallback_stop
+    except Exception:
+        stop = fallback_stop
 
     # 1) Clean tokens (keep simple word shapes, drop stopwords)
     words_all = []
@@ -166,18 +176,22 @@ def word_cluster(tokens: list[str]) -> str:
     X = np.array([model[w] for w in words], dtype=float)
 
     # 3) PCA
-    pca = PCA(n_components=min(PCA_COMPONENTS, X.shape[1]), random_state=RANDOM_STATE)
+    pca = PCA(n_components=min(PCA_COMPONENTS, X.shape[0], X.shape[1]), random_state=RANDOM_STATE)
     X_reduced = pca.fit_transform(X)
 
     # 4) Choose K automatically in [10..50] (with graceful fallback)
     K = _choose_k_auto(X_reduced, min_k=10, max_k=50, random_state=RANDOM_STATE)
 
     # 5) KMeans on PCA space (authoritative labels)
-    kmeans = KMeans(n_clusters=K, n_init="auto", random_state=RANDOM_STATE)
+    # Use integer n_init for scikit-learn 1.3 compatibility
+    kmeans = KMeans(n_clusters=K, n_init=10, random_state=RANDOM_STATE)
     labels = kmeans.fit_predict(X_reduced)
 
     # 6) t-SNE for 2D viz
-    perp = max(5, min(30, len(words) // 3))  # robust perplexity for small vocab
+    # Perplexity must be < n_samples; choose a safe value
+    n_samples = len(words)
+    candidate = max(2, n_samples // 3)
+    perp = max(2, min(30, n_samples - 1, candidate))
     tsne = TSNE(n_components=2, perplexity=perp, learning_rate="auto",
                 init="random", random_state=RANDOM_STATE)
     X_2d = tsne.fit_transform(X_reduced)
@@ -189,7 +203,8 @@ def word_cluster(tokens: list[str]) -> str:
     point_colors = np.array([color_map[lab] for lab in labels])
 
     # 8) Plot
-    fig, ax = plt.subplots(figsize=(18, 12), dpi=200)
+    # Smaller figure and moderate DPI to keep base64 payloads reasonable
+    fig, ax = plt.subplots(figsize=(10, 6), dpi=150)
 
     ax.scatter(X_2d[:, 0], X_2d[:, 1], c=point_colors, s=70, alpha=0.95, linewidths=0, zorder=1)
     for x, y, w, lab in zip(X_2d[:, 0], X_2d[:, 1], words, labels):
@@ -220,7 +235,7 @@ def word_cluster(tokens: list[str]) -> str:
 
     # 9) Return as base64 PNG (no data URL prefix; your frontend can add it)
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=300, bbox_inches="tight")
+    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
     plt.close(fig)
     buf.seek(0)
     b64 = base64.b64encode(buf.read()).decode("ascii")

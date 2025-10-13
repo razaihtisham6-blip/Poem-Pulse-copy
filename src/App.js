@@ -1,10 +1,11 @@
 import './App.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { analyzeFile } from "./test";
 import LoadingScreen from './LoadingScreen';
 import ResultsPage from './ResultsPage';
 import ExitPage from './ExitPage';
 import ThankYouPage from './ThankYouPage';
+import BackendStarting from './BackendStarting';
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -13,6 +14,32 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
+  const [isBackendReady, setIsBackendReady] = useState(false);
+
+  useEffect(() => {
+    let isCancelled = false;
+    let attempts = 0;
+    const maxAttempts = 120; // ~2 minutes
+
+    const checkBackend = async () => {
+      attempts += 1;
+      try {
+        const res = await fetch('http://127.0.0.1:8000/', { method: 'GET' });
+        if (!isCancelled && res.ok) {
+          setIsBackendReady(true);
+          return;
+        }
+      } catch (e) {
+        // ignore and retry
+      }
+      if (!isCancelled && attempts < maxAttempts) {
+        setTimeout(checkBackend, 1000);
+      }
+    };
+
+    checkBackend();
+    return () => { isCancelled = true; };
+  }, []);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -121,6 +148,10 @@ function App() {
     console.log('Thank You page complete - closing application');
     window.close();
   };
+
+  if (!isBackendReady) {
+    return <BackendStarting message="Starting backend..." />;
+  }
 
   if (currentScreen === 'loading') {
     return <LoadingScreen onCancel={handleCancel} />;

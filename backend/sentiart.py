@@ -1,8 +1,12 @@
 from sklearn.metrics.pairwise import cosine_similarity
 from gensim.models import KeyedVectors
 import numpy as np
+from pathlib import Path
 
-model = KeyedVectors.load("glove50.kv", mmap='r')
+# Load local GloVe vectors relative to this file to avoid CWD issues
+_BASE_DIR = Path(__file__).resolve().parent
+_MODEL_PATH = _BASE_DIR / "glove50.kv"
+model = KeyedVectors.load(str(_MODEL_PATH), mmap='r')
 
 positive_ref = np.mean([model[w] for w in ["good", "happy", "love"] if w in model], axis=0)
 negative_ref = np.mean([model[w] for w in ["bad", "sad", "hate"] if w in model], axis=0)

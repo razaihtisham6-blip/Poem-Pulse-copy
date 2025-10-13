@@ -31,6 +31,16 @@ function ExitPage({ results, onUploadAnother, onExit }) {
       URL.revokeObjectURL(url);
     }
     
+    else if (format === 'png') {
+      const plotB64 = results?.cluster?.plot || '';
+      if (!plotB64) return;
+      const href = plotB64.startsWith('data:image') ? plotB64 : `data:image/png;base64,${plotB64}`;
+      const link = document.createElement('a');
+      link.href = href;
+      link.download = `poem-pulse-clusters-${timestamp}.png`;
+      link.click();
+    }
+    
     else if (format === 'txt') {
       let content = `POEM PULSE ANALYSIS RESULTS\n`;
       content += `Generated on: ${new Date().toLocaleDateString()}\n\n`;
@@ -212,6 +222,9 @@ function ExitPage({ results, onUploadAnother, onExit }) {
         <div className="download-options">
           <button className="download-results-btn" onClick={() => downloadResults('pdf')}>
             Download PDF Report
+          </button>
+          <button className="download-results-btn" onClick={() => downloadResults('png')}>
+            Download PNG (Cluster)
           </button>
           <button className="download-results-btn" onClick={() => downloadResults('txt')}>
             Download Text Report
