@@ -15,8 +15,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "start:backend": "cd backend && python -m uvicorn backend:app --reload --host 127.0.0.1 --port 8000",
-    "start:dev": "concurrently \"npm run start:backend\" \"npm start\" --names \"Backend,Frontend\" --prefix-colors \"blue,green\"",
+    "start:backend": "cd backend && python -m uvicorn backend:app --host 127.0.0.1 --port 8000",
+    "start:dev": "concurrently --kill-others-on-fail \"npm run start:backend\" \"npm start\" --names \"Backend,Frontend\" --prefix-colors \"blue,green\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

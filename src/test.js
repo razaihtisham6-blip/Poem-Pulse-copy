@@ -17,3 +17,22 @@ export function analyzeFile(file) {
         return res.json();
     });
 }
+
+export async function sendShutdown() {
+    try {
+        const response = await fetch("http://127.0.0.1:8000/shutdown", {
+            method: "POST",
+        });
+
+        if (!response.ok) {
+            throw new Error(`Shutdown request failed with status ${response.status}`);
+            //console.error("Failed to send shutdown request:", response.statusText);
+        }
+
+        const data = await response.json();
+        console.log("Shutdown response:", data);
+        return data.message;
+    } catch (err) {
+        console.error("Error sending shutdown request:", err);
+    }
+}

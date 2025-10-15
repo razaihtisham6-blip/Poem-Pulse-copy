@@ -15,6 +15,8 @@ from sensorimotor import sensory_norm
 from pydantic import BaseModel  # ADDED
 # ===============================================================================
 
+import os, asyncio
+
 app = FastAPI()
 
 origins = [
@@ -197,4 +199,14 @@ async def analyse_text(payload: TextPayload):
             content={"error": f"Failed to process text: {str(e)}"},
             status_code=500
         )
+    
+@app.post("/shutdown")
+async def shutdown():
+    print("Shutdown initiated...")
+    asyncio.create_task(_shutdown_server())
+    return {"shutdown": True}
+
+async def _shutdown_server():
+    await asyncio.sleep(1)  # Give the response time to be sent
+    os._exit(1)
 # =======================================================================================

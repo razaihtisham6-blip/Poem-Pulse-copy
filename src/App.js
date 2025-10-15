@@ -1,6 +1,6 @@
 import './App.css';
 import { useState, useEffect } from 'react';
-import { analyzeFile } from "./test";
+import { analyzeFile, sendShutdown } from "./test";
 import LoadingScreen from './LoadingScreen';
 import ResultsPage from './ResultsPage';
 import ExitPage from './ExitPage';
@@ -142,6 +142,7 @@ function App() {
   const handleExit = () => {
     console.log('Exit clicked - showing thank you page');
     setCurrentScreen('thank-you');
+    sendShutdown();
   };
 
   const handleThankYouComplete = () => {
