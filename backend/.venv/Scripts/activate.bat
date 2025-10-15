@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\Home\Documents\P\Poem-Pulse\backend\.venv
+set VIRTUAL_ENV=C:\Users\Home\Documents\Final_Poem_Pulse\Poem-Pulse\backend\.venv
 
 if not defined PROMPT set PROMPT=$P$G
 
