@@ -18,6 +18,14 @@ body {
   align-items: center;
   justify-content: center;
   padding: 24px;
+
+  /* 🌌 Background Image (enlarged icons) */
+  background-image: url("./Background.png"),
+    radial-gradient(1200px 800px at 20% 10%, #281a49 0%, #0d1623 60%, #07121c 100%);
+  background-repeat: repeat, no-repeat;
+  background-size: 350px auto, cover; /* ⬅️ increased from 220px to 350px */
+  background-position: top left, center;
+  background-blend-mode: overlay;
 }
 
 .container {
@@ -188,3 +196,5 @@ body {
   display: table;
   clear: both;
 }
+
+
