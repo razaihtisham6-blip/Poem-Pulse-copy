@@ -1,0 +1,3 @@
+This test covers the “no results” state. When the component receives no data (results is null), it should clearly tell the user that no results were received and avoid showing any of the analysis UI.
+
+In practice, we render the component with results set to null. We then confirm that the message “No results received.” is visible. We also confirm that none of the analysis panels are on the page (Word Frequency Analysis, Semantic Clustering Visualization, Sentiment Analysis), and that the “Next” button is not shown. In other words, the page stays in a simple, safe fallback view.

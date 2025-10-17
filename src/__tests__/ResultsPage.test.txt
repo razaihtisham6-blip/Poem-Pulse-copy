@@ -1,0 +1,5 @@
+This file explains the one ResultsPage test we keep: it checks that the word-frequency list actually reorders when the user changes the Sort dropdown.
+
+We render the page with three words and their relative frequencies: cherry (0.3), apple (0.2), and banana (0.1). Because the default is Descending, cherry should appear first. Then we change the Sort to Ascending and expect banana to move to the top of the list. If those two expectations hold, the sorting control is working as intended.
+
+The test uses Testing Library queries and userEvent to switch the select input, just like a real user would.

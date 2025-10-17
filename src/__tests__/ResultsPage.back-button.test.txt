@@ -1,0 +1,3 @@
+This test confirms that clicking the “Next” button calls the callback provided by the parent.
+
+We render ResultsPage with a mock function passed in as onBack and with minimal results so the button is present. Then we click the “Next” button and expect the mock to have been called exactly once. If that happens, we know the component is wiring the button to the callback correctly.

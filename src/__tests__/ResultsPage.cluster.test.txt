@@ -1,0 +1,7 @@
+These tests cover how the clustering visualization is displayed.
+
+We check two scenarios:
+1) When clustering data is provided, we expect to see an image for the visualization. Specifically, the image should be present with the alt text “Word clustering visualization”, and the fallback message should not appear.
+2) When clustering data is missing, we expect to see a clear fallback message (“No clustering visualization available”), and there should be no image.
+
+This ensures the UI gracefully handles both the presence and absence of cluster output.
