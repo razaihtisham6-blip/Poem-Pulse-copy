@@ -13,9 +13,10 @@ from sensorimotor import sensory_norm
 
 # ===== ADDED: extra imports for the new raw-text endpoint and small helpers =====
 from pydantic import BaseModel  # ADDED
-# ===============================================================================
+# ==============================================================================
 
 import os, asyncio
+import re
 
 app = FastAPI()
 
@@ -31,6 +32,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+# ===== ADDED: Lightweight stopword list to remove less-meaningful words =====
+STOPWORDS = {
+    'a','an','and','the','is','are','was','were','be','been','being','am','do','does','did','doing','done',
+    'to','of','in','on','for','from','by','with','at','into','onto','over','under','between','among','about','above','below','through','during','before','after','against','without','within','across','behind','beyond','around',
+    'as','but','if','than','then','that','this','these','those','such','so','or','nor','not','no','only','just','very','too',
+    'i','me','my','mine','we','us','our','ours','you','your','yours','he','him','his','she','her','hers','they','them','their','theirs','it','its','one','ones','someone','something',
+    'there','here','where','when','how','why','what','which','who','whom','whose',
+    'can','could','will','would','shall','should','may','might','must',
+    'also','ever','never','again','still','yet','each','every','either','neither','both','all','any','some','many','much','few','more','most','less','least'
+}
+
 
 def extract_text_from_file(file_content: bytes, filename: str) -> str:
     """Extract text content from uploaded file based on its extension."""
@@ -69,8 +82,16 @@ def extract_text_from_file(file_content: bytes, filename: str) -> str:
     else:
         raise ValueError(f"Unsupported file format: {file_extension}")
 
+
 def tokenize(text):
-    return [w.lower() for w in text.split()]
+    """Tokenize and filter: remove punctuation, connectors, and stopwords.
+    - Keep alphabetic words and apostrophes
+    - Lowercase and strip apostrophes (e.g., don't -> dont)
+    - Drop very short tokens and common stopwords
+    """
+    raw_tokens = re.findall(r"[A-Za-z']+", text)
+    normalized = [t.lower().replace("'", "") for t in raw_tokens]
+    return [w for w in normalized if len(w) > 1 and w not in STOPWORDS]
 
 # ===== ADDED: tiny helper to strip UTF-8 BOM from some Windows-exported .txt files =====
 def _strip_utf8_bom(data: bytes) -> bytes:
