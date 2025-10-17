@@ -4,6 +4,9 @@ import Modal from './Modal';
 
 function ResultsPage({ results, onBack }) {
   const [openModal, setOpenModal] = useState(null); // 'freq' | 'cluster' | 'sentiment' | 'sensor'
+  const [sentimentView, setSentimentView] = useState('positive'); // 'positive' | 'negative'
+  const [freqOrder, setFreqOrder] = useState('desc'); // 'asc' | 'desc'
+  const [sentimentOrder, setSentimentOrder] = useState('desc'); // 'asc' | 'desc'
 
   if (!results) return <p>No results received.</p>;
 
@@ -25,9 +28,21 @@ function ResultsPage({ results, onBack }) {
               <div className="placeholder-content">
                 {frequencyData ? (
                   <div className="frequency-list">
-                    <p className="frequency-description">Top words by relative frequency:</p>
+                    <div className="ui-controls" style={{justifyContent:'space-between'}} onClick={(e)=>e.stopPropagation()}>
+                      <p className="frequency-description" style={{margin:0}}>Top words by relative frequency:</p>
+                      <div className="ui-controls" style={{margin:0}}>
+                        <label htmlFor="freq-sort" className="ui-label">Sort:</label>
+                        <select id="freq-sort" className="ui-select" value={freqOrder} onChange={(e)=>setFreqOrder(e.target.value)}>
+                          <option value="desc">Descending</option>
+                          <option value="asc">Ascending</option>
+                        </select>
+                      </div>
+                    </div>
                     <ul className="frequency-items">
-                      {Object.entries(frequencyData).slice(0, 20).map(([word, freq]) => (
+                      {Object.entries(frequencyData)
+                        .sort((a,b) => freqOrder==='desc' ? Number(b[1]) - Number(a[1]) : Number(a[1]) - Number(b[1]))
+                        .slice(0, 20)
+                        .map(([word, freq]) => (
                         <li key={word} className="frequency-item">
                           <span className="word">{word}</span>: 
                           <span className="frequency">
@@ -51,10 +66,10 @@ function ResultsPage({ results, onBack }) {
             <h2 className="panel-title">Semantic Clustering Visualization</h2>
             <div className="panel-content">
               <div className="placeholder-content">
-                {clusterData && clusterData.plot ? (
+                {clusterData && (clusterData.simple || clusterData.plot) ? (
                   <div style={{width: '100%'}}>
                     <img
-                      src={`data:image/png;base64,${clusterData.plot}`}
+                      src={`data:image/png;base64,${clusterData.simple || clusterData.plot}`}
                       alt="Word clustering visualization"
                       className="cluster-image"
                     />
@@ -73,8 +88,7 @@ function ResultsPage({ results, onBack }) {
               <div className="placeholder-content">
                 {sentimentData ? (
                   <div className="sentiment-analysis">
-                    <p className="sentiment-description">Sentiment scores for words in your text:</p>
-                    <div className="sentiment-summary">
+                    <div className="sentiment-summary highlight">
                       {(() => {
                         const validSentiments = Object.entries(sentimentData).filter(([word, score]) => score !== null);
                         const avgSentiment = validSentiments.reduce((sum, [_, score]) => sum + score, 0) / validSentiments.length;
@@ -85,22 +99,41 @@ function ResultsPage({ results, onBack }) {
                           <div className="sentiment-stats">
                             <p><strong>Overall Sentiment:</strong> {avgSentiment > 0 ? 'Positive' : avgSentiment < 0 ? 'Negative' : 'Neutral'}</p>
                             <p><strong>Average Score:</strong> {avgSentiment.toFixed(3)}</p>
-                            <p><strong>Positive words:</strong> {positiveWords} | <strong>{negativeWords}</strong></p>
+                            <p><strong>Positive words:</strong> {positiveWords}, <strong>Negative words:</strong> {negativeWords}</p>
                           </div>
                         );
                       })()}
                     </div>
+                    <div className="ui-controls" onClick={(e)=>e.stopPropagation()}>
+                      <div className="ui-controls" style={{margin:0}}>
+                        <label htmlFor="sentiment-view" className="ui-label">View:</label>
+                        <select id="sentiment-view" className="ui-select" value={sentimentView} onChange={(e)=>setSentimentView(e.target.value)}>
+                          <option value="positive">Positive</option>
+                          <option value="negative">Negative</option>
+                        </select>
+                      </div>
+                      <div className="ui-controls" style={{margin:0}}>
+                        <label htmlFor="sentiment-sort" className="ui-label">Sort:</label>
+                        <select id="sentiment-sort" className="ui-select" value={sentimentOrder} onChange={(e)=>setSentimentOrder(e.target.value)}>
+                          <option value="desc">Descending</option>
+                          <option value="asc">Ascending</option>
+                        </select>
+                      </div>
+                    </div>
+                    <p className="sentiment-description">{sentimentView==='positive' ? 'Words with positive sentiment' : 'Words with negative sentiment'}:</p>
                     <ul className="sentiment-items">
-                      {Object.entries(sentimentData).slice(0, 15).map(([word, score]) => (
-                        score !== null && (
+                      {Object.entries(sentimentData)
+                        .filter(([_, s]) => s !== null && (sentimentView==='positive' ? s > 0 : s < 0))
+                        .sort((a,b) => sentimentOrder==='desc' ? (Number(b[1]) - Number(a[1])) : (Number(a[1]) - Number(b[1])))
+                        .slice(0, 30)
+                        .map(([word, score]) => (
                           <li key={word} className="sentiment-item">
-                            <span className="word">{word}</span>: 
+                            <span className="word">{word}</span>
                             <span className={`sentiment-score ${score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral'}`}>
                               {score.toFixed(3)}
                             </span>
                           </li>
-                        )
-                      ))}
+                        ))}
                     </ul>
                   </div>
                 ) : (
@@ -154,8 +187,17 @@ function ResultsPage({ results, onBack }) {
         <Modal open={openModal==='freq'} title="Word Frequency Analysis" onClose={() => setOpenModal(null)}>
           {frequencyData ? (
             <div style={{maxHeight:'70vh', overflow:'auto'}}>
+              <div className="ui-controls right" style={{marginBottom:10}}>
+                <label htmlFor="freq-sort-modal" className="ui-label">Sort:</label>
+                <select id="freq-sort-modal" className="ui-select" value={freqOrder} onChange={(e)=>setFreqOrder(e.target.value)}>
+                  <option value="desc">Descending</option>
+                  <option value="asc">Ascending</option>
+                </select>
+              </div>
               <ul className="frequency-items">
-                {Object.entries(frequencyData).map(([word, freq]) => (
+                {Object.entries(frequencyData)
+                  .sort((a,b) => freqOrder==='desc' ? Number(b[1]) - Number(a[1]) : Number(a[1]) - Number(b[1]))
+                  .map(([word, freq]) => (
                   <li key={word} className="frequency-item">
                     <span className="word">{word}</span>
                     <span className="frequency">
@@ -170,20 +212,28 @@ function ResultsPage({ results, onBack }) {
           ) : <p>No frequency data found</p>}
         </Modal>
 
-        <Modal open={openModal==='cluster'} title="Semantic Clustering Visualization" onClose={() => setOpenModal(null)}>
-          {clusterData && clusterData.plot ? (
-            <img
-              src={`data:image/png;base64,${clusterData.plot}`}
-              alt="Word clustering visualization"
-              style={{maxWidth:'100%', height:'auto', borderRadius:12}}
-            />
+        <Modal open={openModal==='cluster'} title="Semantic Clustering Visualization" onClose={() => setOpenModal(null)} fullscreen>
+          {clusterData && (clusterData.labeled || clusterData.plot) ? (
+            <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center'}}>
+              <img
+                src={`data:image/png;base64,${clusterData.labeled || clusterData.plot}`}
+                alt="Word clustering visualization"
+                style={{
+                  width:'100%',
+                  height:'100%',
+                  objectFit:'contain',
+                  borderRadius:12,
+                  display:'block'
+                }}
+              />
+            </div>
           ) : <p>No clustering visualization available</p>}
         </Modal>
 
         <Modal open={openModal==='sentiment'} title="Sentiment Analysis" onClose={() => setOpenModal(null)}>
           {sentimentData ? (
             <div className="sentiment-analysis" style={{maxHeight:'70vh', overflow:'auto'}}>
-              <div className="sentiment-summary">
+              <div className="sentiment-summary highlight">
                 {(() => {
                   const validSentiments = Object.entries(sentimentData).filter(([word, score]) => score !== null);
                   const avgSentiment = validSentiments.reduce((sum, [_, score]) => sum + score, 0) / validSentiments.length;
@@ -193,22 +243,39 @@ function ResultsPage({ results, onBack }) {
                     <div className="sentiment-stats">
                       <p><strong>Overall Sentiment:</strong> {avgSentiment > 0 ? 'Positive' : avgSentiment < 0 ? 'Negative' : 'Neutral'}</p>
                       <p><strong>Average Score:</strong> {avgSentiment.toFixed(3)}</p>
-                      <p><strong>Positive words:</strong> {positiveWords} | <strong>{negativeWords}</strong></p>
+                      <p><strong>Positive words:</strong> {positiveWords}, <strong>Negative words:</strong> {negativeWords}</p>
                     </div>
                   );
                 })()}
               </div>
+              <div className="ui-controls" style={{marginBottom:12}}>
+                <div className="ui-controls" style={{margin:0}}>
+                  <label htmlFor="sentiment-view-modal" className="ui-label">View:</label>
+                  <select id="sentiment-view-modal" className="ui-select" value={sentimentView} onChange={(e)=>setSentimentView(e.target.value)}>
+                    <option value="positive">Positive</option>
+                    <option value="negative">Negative</option>
+                  </select>
+                </div>
+                <div className="ui-controls" style={{margin:0}}>
+                  <label htmlFor="sentiment-sort-modal" className="ui-label">Sort:</label>
+                  <select id="sentiment-sort-modal" className="ui-select" value={sentimentOrder} onChange={(e)=>setSentimentOrder(e.target.value)}>
+                    <option value="desc">Descending</option>
+                    <option value="asc">Ascending</option>
+                  </select>
+                </div>
+              </div>
               <ul className="sentiment-items">
-                {Object.entries(sentimentData).map(([word, score]) => (
-                  score !== null && (
+                {Object.entries(sentimentData)
+                  .filter(([_, s]) => s !== null && (sentimentView==='positive' ? s > 0 : s < 0))
+                  .sort((a,b) => sentimentOrder==='desc' ? (Number(b[1]) - Number(a[1])) : (Number(a[1]) - Number(b[1])))
+                  .map(([word, score]) => (
                     <li key={word} className="sentiment-item">
                       <span className="word">{word}</span>
                       <span className={`sentiment-score ${score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral'}`}>
                         {score.toFixed(3)}
                       </span>
                     </li>
-                  )
-                ))}
+                  ))}
               </ul>
             </div>
           ) : <p>No sentiment data found</p>}

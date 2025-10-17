@@ -189,7 +189,7 @@ def _wrap_columns(lines, n_cols):
     return col_texts, max_rows
 
 # ---------------- Public API ----------------
-def word_cluster(tokens: list[str]) -> str:
+def word_cluster(tokens: list[str]) -> dict[str, str]:
     """
     Build a t-SNE word cluster plot and return a base64 PNG string.
     Input: list of tokens (lowercased in your backend).
@@ -216,7 +216,8 @@ def word_cluster(tokens: list[str]) -> str:
         fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
         plt.close(fig)
         buf.seek(0)
-        return base64.b64encode(buf.read()).decode("ascii")
+        b64 = base64.b64encode(buf.read()).decode("ascii")
+        return {"simple": b64, "labeled": b64}
 
     # 3) Embeddings
     model = _get_model()
@@ -229,7 +230,8 @@ def word_cluster(tokens: list[str]) -> str:
         fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
         plt.close(fig)
         buf.seek(0)
-        return base64.b64encode(buf.read()).decode("ascii")
+        b64 = base64.b64encode(buf.read()).decode("ascii")
+        return {"simple": b64, "labeled": b64}
 
     X = np.array([model[w] for w in words], dtype=float)
 
@@ -258,7 +260,20 @@ def word_cluster(tokens: list[str]) -> str:
     color_map = {lab: cmap(i) for i, lab in enumerate(uniq)}
     point_colors = np.array([color_map[lab] for lab in labels])
 
-    # 9) Summaries BEFORE plotting
+    # 9A) Create a simple plot (points only) for compact views
+    fig_simple, ax_simple = plt.subplots(figsize=(10, 6), dpi=150)
+    ax_simple.scatter(X_2d[:, 0], X_2d[:, 1], c=point_colors, s=70, alpha=0.95, linewidths=0, zorder=1)
+    handles_simple = [Patch(color=color_map[lab], label=f"Cluster {lab}") for lab in uniq]
+    ax_simple.legend(handles=handles_simple, title=f"KMeans (k={len(uniq)})", bbox_to_anchor=(1.02, 1), loc="upper left")
+    ax_simple.set_title("t-SNE Word Clusters", fontsize=16)
+    buf_simple = io.BytesIO()
+    fig_simple.tight_layout()
+    fig_simple.savefig(buf_simple, format="png", dpi=150, bbox_inches="tight")
+    plt.close(fig_simple)
+    buf_simple.seek(0)
+    b64_simple = base64.b64encode(buf_simple.read()).decode("ascii")
+
+    # 9B) Build summaries BEFORE plotting labeled figure
     summary_lines = _build_cluster_summaries(words, labels, X_reduced, top_n=5)
 
     # ----- Layout for neat, non-overlapping summaries -----
@@ -319,13 +334,13 @@ def word_cluster(tokens: list[str]) -> str:
 
     fig.tight_layout()
 
-    # 12) Return as base64 PNG
+    # 12) Return both base64 PNGs
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
     plt.close(fig)
     buf.seek(0)
     b64 = base64.b64encode(buf.read()).decode("ascii")
-    return b64
+    return {"simple": b64_simple, "labeled": b64}
 
 
 

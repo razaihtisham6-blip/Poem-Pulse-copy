@@ -156,8 +156,8 @@ async def analyse(file: UploadFile):
         #keyness statistic
         freq = relative_freq(text_processed)
 
-        #word cluster
-        custer_img = word_cluster(text_processed)
+        #word cluster (returns dict with 'simple' and 'labeled')
+        cluster_imgs = word_cluster(text_processed)
 
         #sentiart sentiment ratings
         rating = ratings(text_processed)
@@ -165,11 +165,11 @@ async def analyse(file: UploadFile):
         #sensorimotor norms
         sensor = sensory_norm(text_processed)
 
-        print("Clustering image length:", len(custer_img))
-        print("Clustering preview:", custer_img[:50])
-
         # Organize cluster data properly
-        cluster_data = {"plot": custer_img}
+        cluster_data = {
+            "simple": cluster_imgs.get("simple", ""),
+            "labeled": cluster_imgs.get("labeled", "")
+        }
         
         return JSONResponse(content = {
             "relative_frequency": freq, 
@@ -202,11 +202,14 @@ async def analyse_text(payload: TextPayload):
         text_processed = tokenize(text)
 
         freq = relative_freq(text_processed)
-        custer_img = word_cluster(text_processed)
+        cluster_imgs = word_cluster(text_processed)
         rating = ratings(text_processed)
         sensor = sensory_norm(text_processed)
 
-        cluster_data = {"plot": custer_img}
+        cluster_data = {
+            "simple": cluster_imgs.get("simple", ""),
+            "labeled": cluster_imgs.get("labeled", "")
+        }
 
         return JSONResponse(content={
             "relative_frequency": freq,

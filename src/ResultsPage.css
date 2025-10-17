@@ -138,6 +138,46 @@
   background-color: #3d903d;
 }
 
+/* Consistent UI controls */
+.ui-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.ui-controls.right {
+  justify-content: flex-end;
+}
+
+.ui-label {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.ui-select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background-color: #ffffff;
+  color: #111111;
+  border: 1px solid var(--border);
+  outline: none;
+  appearance: auto;
+  -webkit-appearance: menulist;
+}
+
+.ui-select:focus {
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.25);
+}
+
+/* Improve readability of dropdown choices (browser permitting) */
+.ui-select option, .ui-select optgroup {
+  color: #111111;
+  background-color: #ffffff;
+}
+
 /* Data-specific styling */
 .frequency-list {
   width: 100%;
@@ -200,6 +240,12 @@
   border-radius: 12px;
   margin-bottom: 15px;
   border: 1px solid var(--border);
+}
+
+.sentiment-summary.highlight {
+  background: linear-gradient(180deg, rgba(124,58,237,0.18), rgba(34,211,238,0.18));
+  box-shadow: 0 8px 24px rgba(124,58,237,0.25);
+  border-color: rgba(124,58,237,0.35);
 }
 
 .sentiment-stats {
