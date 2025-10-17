@@ -36,7 +36,7 @@ npm install
 **Backend (Python packages):**
 ```bash
 cd backend
-pip install fastapi uvicorn scikit-learn gensim matplotlib pandas numpy python-docx
+pip install fastapi uvicorn scikit-learn gensim matplotlib pandas numpy python-docx httpx
 cd ..
 ```
 

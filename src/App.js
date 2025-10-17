@@ -1,6 +1,6 @@
 import './App.css';
 import { useState, useEffect } from 'react';
-import { analyzeFile, sendShutdown } from "./test";
+import { analyzeFile, analyzeText, sendShutdown } from "./test";
 import LoadingScreen from './LoadingScreen';
 import ResultsPage from './ResultsPage';
 import ExitPage from './ExitPage';
@@ -42,19 +42,41 @@ function App() {
   }, []);
 
   const handleFileUpload = (event) => {
-    const file = event.target.files[0];
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    // If user selected a folder (webkitdirectory), combine all .txt files
+    if (files.length > 1) {
+      const texts = [];
+      for (const file of files) {
+        const ext = '.' + file.name.split('.').pop().toLowerCase();
+        if (ext === '.txt') {
+          // read text content
+          // eslint-disable-next-line no-loop-func
+          texts.push(file.text());
+        }
+      }
+      Promise.all(texts).then((parts) => {
+        const combined = parts.join('\n\n');
+        const blob = new Blob([combined], { type: 'text/plain' });
+        const pseudoFile = new File([blob], 'batch_combined.txt', { type: 'text/plain' });
+        setSelectedFile(pseudoFile);
+        setErrorMessage('');
+        console.log('Batch folder combined into one text, bytes:', blob.size);
+      });
+      return;
+    }
+    // Single file path
+    const file = files[0];
     if (file) {
-      // Validate file type
       const allowedTypes = ['.txt', '.doc', '.docx'];
       const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-      
       if (allowedTypes.includes(fileExtension)) {
         setSelectedFile(file);
-        setErrorMessage(''); // Clear any previous error
+        setErrorMessage('');
         console.log('File selected:', file.name, 'Size:', file.size, 'bytes');
       } else {
         setErrorMessage('Please select a valid file type (.txt, .doc, or .docx)');
-        event.target.value = ''; // Clear the input
+        event.target.value = '';
       }
     }
   };
@@ -215,8 +237,20 @@ function App() {
                 onChange={handleFileUpload}
                 style={{ display: 'none' }}
               />
+              <input
+                type="file"
+                id="folder-upload"
+                webkitdirectory="true"
+                directory="true"
+                multiple
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
               <label htmlFor="file-upload" className="browse-button">
                 Browse...
+              </label>
+              <label htmlFor="folder-upload" className="browse-button" style={{marginLeft: 8}}>
+                Browse Folder...
               </label>
             </>
           )}
