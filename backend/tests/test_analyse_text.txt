@@ -1,0 +1,14 @@
+This note explains the test for the /analyse-text endpoint when the input text is empty.
+
+What should happen
+- If the request sends an empty string for "text", the server should reply with:
+  - HTTP 400 status code
+  - JSON body: {"error": "No text provided."}
+
+How the test does it
+- It uses FastAPI's TestClient to send POST /analyse-text with json={"text": ""}.
+- It checks that the status is 400 and the JSON matches the expected error.
+
+Why this matters
+- It prevents the API from doing unnecessary work and gives the user a clear, consistent error message.
+

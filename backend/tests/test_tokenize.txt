@@ -1,0 +1,12 @@
+This test checks the tokenize() helper in backend/backend.py.
+
+We give it the text: "Don't, THE a sun". The function is supposed to:
+- lowercase words
+- remove apostrophes (so "Don't" becomes "dont")
+- drop common stopwords like "the" and "a"
+- skip tokens that are only one character long
+
+So the expected result is "dont", "sun". If we get exactly that, tokenize() is doing what we need.
+
+
+

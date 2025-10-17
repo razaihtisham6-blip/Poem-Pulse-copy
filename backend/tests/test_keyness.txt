@@ -1,0 +1,10 @@
+1) It should return a proper distribution that sums to 1, sorted by the most frequent token first.
+   - Example input: ["a", "b", "a", "c", "a"].
+   - We expect the values to add up to 1.0.
+   - We expect 'a' to be first with frequency 0.6 (3 out of 5 tokens).
+
+2) If the input is empty, it should return an empty dictionary.
+
+Why this matters
+- Downstream code expects normalized frequencies and relies on the order to pick top tokens.
+

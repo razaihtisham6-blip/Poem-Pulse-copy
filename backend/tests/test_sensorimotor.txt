@@ -1,0 +1,15 @@
+1) sensory_norm() uppercases words before looking them up, and it returns raw field names.
+   - We fake get_norm so that APPLE returns a tiny dictionary and anything else returns None.
+   - We call sensory_norm(["apple", "banana"]).
+   - We expect get_norm to be called with APPLE and BANANA (uppercase), and the result to have those uppercase keys.
+   - For APPLE, the returned dictionary should keep the original field names with underscores (the UI is the place that prettifies names, not the backend).
+   - For BANANA (unknown), we expect None.
+
+2) get_norm() reads a row from the norms data and returns it as a dictionary with the original field names.
+   - We swap in a tiny, in-memory DataFrame containing a row for APPLE.
+   - We expect get_norm("APPLE") to return that row, including fields with underscores.
+
+Why this matters
+- The backend should deliver raw data exactly as stored, and the UI can decide how to present it.
+- Uppercasing matches how the norms file stores words.
+
