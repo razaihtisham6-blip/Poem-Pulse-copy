@@ -18,6 +18,7 @@ function ResultsPage({ results, onBack }) {
     <div className="results-container">
       <div className="results-content">
         <h1 className="results-title">Analysis Results</h1>
+        <h3 className="results-subtitle">Click on panels to view more information</h3>
 
         <div className="results-grid">
           {/* 🔁 Keyness Statistics Panel */}
@@ -271,6 +272,114 @@ function ResultsPage({ results, onBack }) {
           ) : (
             <p>No keyness chart available</p>
           )}
+        </Modal>
+        {/* 🧩 Modal for Semantic Clustering */}
+        <Modal
+          open={openModal === 'cluster'}
+          title="Semantic Clustering Visualization"
+          onClose={() => setOpenModal(null)}
+        >
+          {clusterData && (clusterData.labeled || clusterData.plot) ? (
+            <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center'}}>
+              <img
+                src={`data:image/png;base64,${clusterData.labeled || clusterData.plot}`}
+                alt="Word clustering visualization"
+                style={{
+                  width:'100%',
+                  height:'100%',
+                  objectFit:'contain',
+                  borderRadius:12,
+                  display:'block'
+                }}
+              />
+            </div>
+          ) : (
+            <p>No clustering visualization available</p>
+          )}
+        </Modal>
+
+        {/* 🧩 Modal for Sentiment Analysis */}
+        <Modal
+          open={openModal === 'sentiment'}
+          title="Semantic Clustering Visualization"
+          onClose={() => setOpenModal(null)}
+        >
+          {sentimentData ? (
+            <div className="sentiment-analysis" style={{maxHeight:'70vh', overflow:'auto'}}>
+              <div className="sentiment-summary highlight">
+                {(() => {
+                  const validSentiments = Object.entries(sentimentData).filter(([word, score]) => score !== null);
+                  const avgSentiment = validSentiments.reduce((sum, [_, score]) => sum + score, 0) / validSentiments.length;
+                  const positiveWords = validSentiments.filter(([_, score]) => score > 0).length;
+                  const negativeWords = validSentiments.filter(([_, score]) => score < 0).length;
+                  return (
+                    <div className="sentiment-stats">
+                      <p><strong>Overall Sentiment:</strong> {avgSentiment > 0 ? 'Positive' : avgSentiment < 0 ? 'Negative' : 'Neutral'}</p>
+                      <p><strong>Average Score:</strong> {avgSentiment.toFixed(3)}</p>
+                      <p><strong>Positive words:</strong> {positiveWords}, <strong>Negative words:</strong> {negativeWords}</p>
+                    </div>
+                  );
+                })()}
+              </div>
+              <div className="ui-controls" style={{marginBottom:12}}>
+                <div className="ui-controls" style={{margin:0}}>
+                  <label htmlFor="sentiment-view-modal" className="ui-label">View:</label>
+                  <select id="sentiment-view-modal" className="ui-select" value={sentimentView} onChange={(e)=>setSentimentView(e.target.value)}>
+                    <option value="positive">Positive</option>
+                    <option value="negative">Negative</option>
+                  </select>
+                </div>
+                <div className="ui-controls" style={{margin:0}}>
+                  <label htmlFor="sentiment-sort-modal" className="ui-label">Sort:</label>
+                  <select id="sentiment-sort-modal" className="ui-select" value={sentimentOrder} onChange={(e)=>setSentimentOrder(e.target.value)}>
+                    <option value="desc">Descending</option>
+                    <option value="asc">Ascending</option>
+                  </select>
+                </div>
+              </div>
+              <ul className="sentiment-items">
+                {Object.entries(sentimentData)
+                  .filter(([_, s]) => s !== null && (sentimentView==='positive' ? s > 0 : s < 0))
+                  .sort((a,b) => sentimentOrder==='desc' ? (Number(b[1]) - Number(a[1])) : (Number(a[1]) - Number(b[1])))
+                  .map(([word, score]) => (
+                    <li key={word} className="sentiment-item">
+                      <span className="word">{word}</span>
+                      <span className={`sentiment-score ${score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral'}`}>
+                        {score.toFixed(3)}
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          ) : <p>No sentiment data found</p>}
+        </Modal>
+        {/* 🧩 Modal for Sensorimotor Norms */}
+        <Modal 
+          open={openModal==='sensor'} 
+          title="Sensorimotor Norms Analysis" 
+          onClose={() => setOpenModal(null)}
+        >
+          {sensorimotorData ? (
+            <div className="sensorimotor-analysis" style={{maxHeight:'70vh', overflow:'auto'}}>
+              <div className="sensorimotor-items">
+                {Object.entries(sensorimotorData).map(([word, norms]) => (
+                  norms && (
+                    <div key={word} className="sensorimotor-item">
+                      <h4 className="norms-word">{word}</h4>
+                      <div className="norms-details">
+                        {Object.entries(norms).map(([key, value]) => (
+                          <div key={key} className="norm-item">
+                            <span className="norm-label">{key.replace(/_/g, ' ')}:</span>
+                            <span className="norm-value">{typeof value === 'number' ? value.toFixed(2) : value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          ) : <p>No sensorimotor data found</p>}
         </Modal>
       </div>
     </div>
