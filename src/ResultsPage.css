@@ -1,4 +1,4 @@
-.results-container {
+.results-container { 
   min-height: 100vh;
   padding: 24px;
   display: flex;
@@ -378,3 +378,61 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* 🔁 Added Keyness Section Styling */
+.keyness-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.poem-input {
+  width: 90%;
+  height: 100px;
+  margin: 10px 0;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background-color: #1a1a1a;
+  color: white;
+  resize: none;
+  font-size: 0.95rem;
+}
+
+.poem-input::placeholder {
+  color: #999;
+}
+
+button {
+  background-color: #6a4df5;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 8px;
+  margin-bottom: 20px;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #7b63f7;
+}
+
+.chart-container {
+  margin-top: 20px;
+  width: 100%;
+  text-align: center;
+}
+
+.chart-container img {
+  max-width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #333;
+  transition: transform 0.2s ease;
+}
+
+.chart-container img:hover {
+  transform: scale(1.02);
+}
+
