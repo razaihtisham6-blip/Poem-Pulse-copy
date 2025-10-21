@@ -8,9 +8,11 @@ _BASE_DIR = Path(__file__).resolve().parent
 _MODEL_PATH = _BASE_DIR / "glove50.kv"
 model = KeyedVectors.load(str(_MODEL_PATH), mmap='r')
 
+#Reference vectors for sentiment calculation
 positive_ref = np.mean([model[w] for w in ["good", "happy", "love"] if w in model], axis=0)
 negative_ref = np.mean([model[w] for w in ["bad", "sad", "hate"] if w in model], axis=0)
 
+#Calculate SentiArt rating for a word
 def sentiart_rating(word):
     if word in model:
         vec = model[word].reshape(1, -1)
@@ -19,6 +21,7 @@ def sentiart_rating(word):
         return pos_sim - neg_sim
     return None
 
+#Calculate SentiArt ratings for all words
 def ratings(processed_text):
     dictionary = {w: sentiart_rating(w) for w in processed_text}
     for key, value in dictionary.items():

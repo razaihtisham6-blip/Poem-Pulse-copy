@@ -10,13 +10,6 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
-# ✅ Download NLTK data if missing
-nltk.download('punkt', quiet=True)
-nltk.download('stopwords', quiet=True)
-nltk.download('wordnet', quiet=True)
-nltk.download('omw-1.4', quiet=True)
-nltk.download('punkt_tab', quiet=True)
-
 router = APIRouter(prefix="")
 
 # ✅ Initialize stopwords and lemmatizer

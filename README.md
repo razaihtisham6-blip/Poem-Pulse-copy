@@ -37,6 +37,7 @@ npm install
 ```bash
 cd backend
 pip install fastapi uvicorn scikit-learn gensim matplotlib pandas numpy python-docx httpx
+python -m nltk.downloader punkt stopwords wordnet omw-1.4 punkt_tab
 cd ..
 ```
 
