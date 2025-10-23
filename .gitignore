@@ -4,6 +4,7 @@
 /node_modules
 /backend/__pycache__/
 /backend/*.pyc
+/backend/.venv/
 /.pnp
 .pnp.js
 

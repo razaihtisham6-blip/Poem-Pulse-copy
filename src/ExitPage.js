@@ -214,9 +214,9 @@ function ExitPage({ results, onUploadAnother, onExit }) {
       <div className="exit-content">
         <div className="reading-summary">
           <p className="reading-line">Your writing shows</p>
-          <p className="reading-line highlight">strong visual themes</p>
+          <p className="reading-line highlight">Strong {results.sensorimotor.max_perceptual} and  {results.sensorimotor.max_action} themes</p>
           <p className="reading-line">You might want to explore expanding</p>
-          <p className="reading-line highlight">sensory diversity in your work</p>
+          <p className="reading-line highlight">Sensory portrayal of {results.sensorimotor.weakness} in your work</p>
         </div>
         
         <div className="download-options">

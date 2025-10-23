@@ -14,6 +14,9 @@ function ResultsPage({ results, onBack }) {
   const clusterData = results.cluster;
   const sensorimotorData = results.sensorimotor;
 
+  //safety
+  const sensorimotor = sensorimotorData && sensorimotorData.data ? sensorimotorData.data : sensorimotorData;
+
   return (
     <div className="results-container">
       <div className="results-content">
@@ -194,13 +197,13 @@ function ResultsPage({ results, onBack }) {
             <h2 className="panel-title">Sensorimotor Norms Analysis</h2>
             <div className="panel-content">
               <div className="placeholder-content">
-                {sensorimotorData ? (
+                {sensorimotor ? (
                   <div className="sensorimotor-analysis">
                     <p className="sensorimotor-description">
                       Sensorimotor features of words in your text:
                     </p>
                     <div className="sensorimotor-items">
-                      {Object.entries(sensorimotorData)
+                      {Object.entries(sensorimotor)
                         .slice(0, 10)
                         .map(([word, norms]) => (
                           norms && (
@@ -361,8 +364,20 @@ function ResultsPage({ results, onBack }) {
         >
           {sensorimotorData ? (
             <div className="sensorimotor-analysis" style={{maxHeight:'70vh', overflow:'auto'}}>
+              {/* if backend provided an image_base64, show it after the expanded data */}
+              {sensorimotorData.image_base64 ? (
+                <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <img
+                    src={`data:image/png;base64,${sensorimotorData.image_base64}`}
+                    alt="Sensorimotor summary"
+                    style={{ maxWidth: '100%', borderRadius: 12, boxShadow: '0 6px 20px rgba(0,0,0,0.25)' }}
+                  />
+                </div>
+              ) : null}
+
               <div className="sensorimotor-items">
-                {Object.entries(sensorimotorData).map(([word, norms]) => (
+                {/* show expanded data (use sensorimotor variable for the word->norms map) */}
+                {Object.entries(sensorimotor).map(([word, norms]) => (
                   norms && (
                     <div key={word} className="sensorimotor-item">
                       <h4 className="norms-word">{word}</h4>

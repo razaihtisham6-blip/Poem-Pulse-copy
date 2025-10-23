@@ -1,6 +1,6 @@
 import './App.css';
 import { useState, useEffect } from 'react';
-import { analyzeFile, analyzeText, sendShutdown } from "./test";
+import { analyzeFile, analyzeText, sendShutdown } from "./HttpHelper";
 import LoadingScreen from './LoadingScreen';
 import ResultsPage from './ResultsPage';
 import ExitPage from './ExitPage';

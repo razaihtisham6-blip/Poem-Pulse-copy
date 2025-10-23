@@ -42,13 +42,30 @@ def sensory_norm(processed_text):
             #Add to data dict
             sensory_norm_data[w] = word_data
 
-    # ===== Graph =====
+    # ===== Graph + analysis =====
     p_keys = list(perceptual_count.keys())
     p_vals = list(perceptual_count.values())
     a_keys = list(action_count.keys())
     a_vals = list(action_count.values())
     s_keys = list(sensorimotor_count.keys())
     s_vals = list(sensorimotor_count.values())
+
+    #Sensory analysis
+    max_value_p = max(p_vals)
+    max_index_p = p_vals.index(max_value_p)
+    max_p_key = p_keys[max_index_p]
+
+    max_value_a = max(a_vals)
+    max_index_a = a_vals.index(max_value_a)
+    max_a_key = a_keys[max_index_a]
+
+    total_p = s_vals[0] + s_vals[1] + s_vals[4] + s_vals[6] + s_vals[8] + s_vals[10]
+    total_a = s_vals[2] + s_vals[3] + s_vals[5] + s_vals[7] + s_vals[9]
+
+    if total_p > total_a:
+        weakness = "actions"
+    else:
+        weakness = "perceptions"
 
     dataset = [
     (p_keys, p_vals),
@@ -82,6 +99,6 @@ def sensory_norm(processed_text):
     image_base64 = base64.b64encode(buf.read()).decode('utf-8')
     buf.close()
 
-    return sensory_norm_data #{"data": sensory_norm_data, "image_base64": image_base64}
+    return {"data": sensory_norm_data, "image_base64": image_base64, "max_perceptual": max_p_key, "max_action": max_a_key, "weakness": weakness}
 
 
