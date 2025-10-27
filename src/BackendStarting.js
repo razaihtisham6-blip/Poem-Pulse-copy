@@ -1,4 +1,4 @@
-import './BackendStarting.css';
+import './assets/BackendStarting.css';
 
 function BackendStarting({ message = 'Starting backend...', onCancel }) {
   return (

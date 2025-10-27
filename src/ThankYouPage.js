@@ -1,6 +1,6 @@
-import './ThankYouPage.css';
+import './assets/ThankYouPage.css';
 import { useEffect } from 'react';
-import thankYouImage from './Poem-Pulse 2.png';
+import thankYouImage from './assets/Poem-Pulse 2.png';
 
 function ThankYouPage({ onComplete }) {
   const shutdownServer = async () => {

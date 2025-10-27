@@ -4,11 +4,11 @@ A powerful poetry analysis web application that provides deep linguistic insight
 
 ## Features
 
-- **📊 Word Frequency Analysis** - Relative frequency statistics
+- **📊 Word Frequency Analysis** - Distinctive keywords from two sets of writings
 - **🎯 Semantic Clustering** - Word clustering with visualization using GloVe embeddings
 - **❤️ Sentiment Analysis** - Emotion and sentiment scoring
 - **🧠 Sensory-Motor Analysis** - Lancaster sensorimotor norms processing
-- **📁 File Upload** - Support for text file uploads (TXT, DOC, DOCX formats)
+- **📁 File Upload** - Support for text file uploads (TXT, DOCX formats)
 
 ## TechnologyStack
 
@@ -23,7 +23,8 @@ A powerful poetry analysis web application that provides deep linguistic insight
 ### Prerequisites
 
 - **Node.js** (v14+) and **npm**
-- **Python** (v3.8+)
+- **Python** (v3.9+)
+- You can install these from their respective websites
 
 ### 1. Install Dependencies
 
@@ -36,7 +37,8 @@ npm install
 **Backend (Python packages):**
 ```bash
 cd backend
-pip install fastapi uvicorn scikit-learn gensim matplotlib pandas numpy python-docx httpx
+pip install --only-binary :all: gensim
+pip install fastapi uvicorn scikit-learn matplotlib pandas python-docx httpx nltk python-multipart
 python -m nltk.downloader punkt stopwords wordnet omw-1.4 punkt_tab
 cd ..
 ```
@@ -105,6 +107,9 @@ matplotlib>=3.5.0
 pandas>=1.3.0
 numpy>=1.21.0
 python-docx>=0.8.11
+httpx>=0.28.1
+python-multipart>=0.0.20
+nltk>=3.9.2
 ```
 
 ## File Structure
@@ -112,18 +117,41 @@ python-docx>=0.8.11
 ```
 Poem-Pulse/
 ├── backend/
-│   ├── backend.py              # FastAPI application
+│   ├── backend.py             # FastAPI application
 │   ├── clusters.py            # Word clustering & visualization
-│   ├── keyness.py             # Frequency analysis
-│   ├── sentiart.py            # Sentiment analysis
-│   ├── sensorimotor.py        # Sensorimotor norms
 │   ├── glove50.kv             # Pre-trained GloVe embeddings
-│   └── Lancaster_sensorimotor_norms_for_39707_words.csv
+│   ├── glove50.kv.vectors.npy # Additional file for GloVe
+│   ├── keyness.py             # Frequency analysis
+│   ├── Lancaster_sensorimotor_norms_for_39707_words.csv
+│   ├── requirements.txt
+│   ├── sentiart.py            # Sentiment analysis
+│   └── sensorimotor.py        # Sensorimotor norms
 ├── src/
+│   ├── index.js
+│   ├── /assets/
+│   │   ├── App.css
+│   │   ├── BackendStarting.css
+│   │   ├── Background.png
+│   │   ├── ExitPage.css
+│   │   ├── index.css
+│   │   ├── LoadingScreen.css
+│   │   ├── Modal.css
+│   │   ├── Poem-Pulse 2.png
+│   │   ├── ResultsPage.css
+│   │   └── ThankYouPage.css
 │   ├── App.js                 # Main React component
+│   ├── BackendStarting.js     # Check backend status
+│   ├── ExitPage.js            # Summary and download results
+│   ├── HttpHelper.js          # Send Http requests to backend
 │   ├── LoadingScreen.js       # Loading state
-│   └── ResultsPage.js         # Results visualization
+│   ├── Modal.js               # Zoom functionality
+│   ├── ResultsPage.js         # Results visualization
+│   └── ThankYouPage.js        # Exit application confirmation
+├── LICENSE
+├── package-lock.json
 ├── package.json              # Frontend dependencies
+├── README.md
+├── server.js
 └── start_all.py              # Python startup script
 ```
 
@@ -140,11 +168,19 @@ Poem-Pulse/
 
 ## Troubleshooting
 
+**Command not recognized**
+- Ensure npm is installed correctly: `npm -v` and `node -v`
+
+**Gensim install error**
+- Try: `pip install --only-binary :all: gensim`
+- If it still fails, install a C++ compiler for your operating system
+
 **Single command not working:**
 - Ensure all dependencies installed: `npm install` and `pip install ...`
 - Check `concurrently` package: `npm install --save-dev concurrently`
 
 **Backend errors:**
+- Check console logs for missing dependencies
 - Verify Python packages in `backend/` directory
 - Check FastAPI dependency: `pip install fastapi uvicorn`
 
@@ -153,7 +189,8 @@ Poem-Pulse/
 - Check React scripts: react-scripts should be installed
 
 **File Upload Issues:**
-- Supported formats: Plain text files (.txt), Word documents (.doc, .docx)
+- Batch upload only supports text file (.txt) inputs
+- Supported formats: Plain text files (.txt), Word documents (.docx)
 - Check file encoding (UTF-8 recommended for .txt files)
 - Maximum recommended size: 10MB for all formats
 

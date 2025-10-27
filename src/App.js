@@ -1,4 +1,4 @@
-import './App.css';
+import './assets/App.css';
 import { useState, useEffect } from 'react';
 import { analyzeFile, analyzeText, sendShutdown } from "./HttpHelper";
 import LoadingScreen from './LoadingScreen';

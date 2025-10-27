@@ -1,4 +1,4 @@
-import './LoadingScreen.css';
+import './assets/LoadingScreen.css';
 
 function LoadingScreen({ onCancel }) {
   return (

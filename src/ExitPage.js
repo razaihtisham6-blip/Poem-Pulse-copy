@@ -1,5 +1,5 @@
 // ExitPage.js
-import './ExitPage.css';
+import './assets/ExitPage.css';
 // ADDED: jsPDF for embedding the cluster image into the PDF
 import jsPDF from 'jspdf';
 

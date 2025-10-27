@@ -1,4 +1,4 @@
-import './ResultsPage.css';
+import './assets/ResultsPage.css';
 import { useState } from 'react';
 import Modal from './Modal';
 
@@ -304,7 +304,7 @@ function ResultsPage({ results, onBack }) {
         {/* 🧩 Modal for Sentiment Analysis */}
         <Modal
           open={openModal === 'sentiment'}
-          title="Semantic Clustering Visualization"
+          title="Sentiment Analysis"
           onClose={() => setOpenModal(null)}
         >
           {sentimentData ? (

@@ -1,4 +1,4 @@
-import './Modal.css';
+import './assets/Modal.css';
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
