@@ -9,6 +9,14 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+from scipy.stats import fisher_exact
+
+# ✅ Download NLTK data if missing
+nltk.download('punkt', quiet=True)
+nltk.download('stopwords', quiet=True)
+nltk.download('wordnet', quiet=True)
+nltk.download('omw-1.4', quiet=True)
+nltk.download('punkt_tab', quiet=True)
 
 router = APIRouter(prefix="")
 
@@ -22,86 +30,87 @@ def clean_words(text: str):
     text = text.lower()
     text = re.sub(r"[^a-z\s]", "", text)
     tokens = word_tokenize(text)
-    cleaned = [
+    return [
         LEMMATIZER.lemmatize(w)
         for w in tokens
         if w not in STOPWORDS and len(w) > 1
     ]
-    return cleaned
 
 
 @router.post("/keyness")
 async def keyness(poemA: UploadFile = File(...), poemB: UploadFile = File(...)):
     try:
-        # ✅ Read both uploaded poem files
+        # ✅ Read uploaded poem files
         textA = (await poemA.read()).decode("utf-8", errors="ignore")
         textB = (await poemB.read()).decode("utf-8", errors="ignore")
-
-        print(f"[INFO] Received files: {poemA.filename}, {poemB.filename}")
-        print(f"[INFO] Length Poem A: {len(textA)} chars | Poem B: {len(textB)} chars")
 
         # ✅ Clean and tokenize
         wordsA = clean_words(textA)
         wordsB = clean_words(textB)
 
-        print("[INFO] Sample cleaned tokens A:", wordsA[:15])
-        print("[INFO] Sample cleaned tokens B:", wordsB[:15])
-
-        # ✅ Compute word frequencies
+        # ✅ Word frequencies
         freqA, freqB = Counter(wordsA), Counter(wordsB)
+        totalA, totalB = sum(freqA.values()), sum(freqB.values())
         all_words = set(freqA.keys()) | set(freqB.keys())
 
-        # ✅ Compute log ratio (effect size)
+        # ✅ Compute Fisher’s Exact Test and log ratio
         data = []
         for w in all_words:
-            a = freqA[w] + 1
-            b = freqB[w] + 1
-            effect = np.log2(a / b)
-            data.append((w, effect))
+            a, b = freqA[w], freqB[w]
+            table = [[a, totalA - a], [b, totalB - b]]
+            _, p = fisher_exact(table, alternative='two-sided')
+            effect = np.log2((a + 1) / (b + 1))  # log ratio
+            data.append((w, a, b, effect, p))
 
-        df = pd.DataFrame(data, columns=["word", "effect_size"]).sort_values("effect_size")
+        df = pd.DataFrame(data, columns=["word", "countA", "countB", "effect", "p"])
 
-        # ✅ Take top and bottom 10 for plotting
-        plot_df = pd.concat([df.head(10), df.tail(10)])
+        # ✅ Sort by absolute effect size and take top 30
+        df_plot = df.reindex(df["effect"].abs().sort_values(ascending=False).index)
+        df_plot = df_plot.head(30)
 
-          # ✅ Create visual plot
+        # ✅ Create clean symmetric diverging plot
         plt.figure(figsize=(9, 10))
-        y = np.arange(len(plot_df))
-        colors = ["#a78bfa" if v > 0 else "#34d399" for v in plot_df["effect_size"]]
-        plt.barh(y, plot_df["effect_size"], color=colors)
-        plt.axvline(0, color="black", linewidth=1)
-        plt.yticks(y, plot_df["word"])
-        plt.title("Keyness Comparison: Poem A vs Poem B", fontsize=13)
-        plt.xlabel("Effect Size (Log Ratio)")
+        y = np.arange(len(df_plot))
 
-        # ✅ Add significance legend box (TOP-LEFT corner)
+        # Symmetrical layout for both sides
+        max_effect = np.ceil(np.max(np.abs(df_plot["effect"])))
+        plt.xlim(-max_effect, max_effect)
+
+        # Colors: Poem A (right) = purple, Poem B (left) = green
+        colors = ["#a78bfa" if v > 0 else "#34d399" for v in df_plot["effect"]]
+
+        plt.barh(y, df_plot["effect"], color=colors)
+        plt.axvline(0, color="black", linewidth=1)
+        plt.yticks(y, df_plot["word"], fontsize=9)
+        plt.title("   Keyness Comparison: Poem A vs Poem B", fontsize=13)
+        plt.xlabel("Effect Size (log₂ ratio)")
+
+        # ✅ Legend box
         legend_text = (
-            "Significance levels (p-value):\n"
-            "p < 0.001 : ***  (highly significant)\n"
-            "p < 0.01  : **   (very significant)\n"
-            "p < 0.05  : *    (significant)"
+            "Right → Over-represented in Poem A (purple)\n"
+            "Left  → Over-represented in Poem B (green)"
         )
         plt.gcf().text(
             0.02, 0.98, legend_text,
             fontsize=9, ha="left", va="top",
-            bbox=dict(facecolor='white', alpha=0.9, edgecolor='gray', boxstyle='round,pad=0.4')
+            bbox=dict(facecolor="white", alpha=0.9, edgecolor="gray", boxstyle="round,pad=0.4")
         )
 
         plt.tight_layout(pad=2.0)
 
-        # ✅ Save figure to buffer
+        # ✅ Save to buffer and return as base64
         buf = io.BytesIO()
-        plt.savefig(buf, format="png", bbox_inches="tight")
+        plt.savefig(buf, format="png", bbox_inches="tight", dpi=150)
         plt.close()
         buf.seek(0)
         img_base64 = base64.b64encode(buf.read()).decode("utf-8")
 
-        print("[INFO] Keyness plot generated successfully.")
+        print("[INFO] Final clean Keyness plot generated successfully.")
         return JSONResponse({"image": img_base64})
 
     except Exception as e:
-        print("[ERROR] Keyness error:", str(e))
-        return JSONResponse({"error": f"Keyness analysis failed: {str(e)}"}, status_code=500)
+        print("[ERROR] Keyness error:", e)
+        return JSONResponse({"error": f"Keyness analysis failed: {e}"}, status_code=500)
 
 
 
