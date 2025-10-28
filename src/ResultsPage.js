@@ -1,5 +1,5 @@
 import './assets/ResultsPage.css';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Modal from './Modal';
 
 function ResultsPage({ results, onBack }) {
@@ -401,7 +401,7 @@ function ResultsPage({ results, onBack }) {
   );
 }
 
-/* ✅ Clean and Correct Keyness Component */
+
 function KeynessAnalysis({ setKeynessImage, setOpenModal }) {
   const [poemAFile, setPoemAFile] = useState(null);
   const [poemBFile, setPoemBFile] = useState(null);
@@ -409,9 +409,50 @@ function KeynessAnalysis({ setKeynessImage, setOpenModal }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const poemAFileRef = useRef(null);
+  const poemAFolderRef = useRef(null);
+  const poemBFileRef = useRef(null);
+  const poemBFolderRef = useRef(null);
+
+  //combine .txt files into a single file
+  const combineTextFiles = async (fileList) => {
+    const files = Array.from(fileList).filter(f => {
+      const ext = '.' + f.name.split('.').pop().toLowerCase();
+      return ext === '.txt';
+    });
+    if (files.length === 0) return null;
+    const texts = await Promise.all(files.map(f => f.text()));
+    const combined = texts.join('\n\n');
+    const blob = new Blob([combined], { type: 'text/plain' });
+    const pseudo = new File([blob], 'batch_combined.txt', { type: 'text/plain' });
+    return pseudo;
+  };
+
+  //folder input helpers
+  const handlePoemAFolder = async (e) => {
+    const pseudo = await combineTextFiles(e.target.files);
+    if (pseudo) {
+      setPoemAFile(pseudo);
+      setError('');
+      if (poemAFileRef.current) poemAFileRef.current.value = ''; //reset file input when other is used
+    } else {
+      setError('No .txt files found in selected Poem A folder');
+    }
+  };
+  const handlePoemBFolder = async (e) => {
+    const pseudo = await combineTextFiles(e.target.files);
+    if (pseudo) {
+      setPoemBFile(pseudo);
+      setError('');
+      if (poemBFileRef.current) poemBFileRef.current.value = ''; //reset file input when other is used
+    } else {
+      setError('No .txt files found in selected Poem B folder');
+    }
+  };
+
   const handleSubmit = async () => {
     if (!poemAFile || !poemBFile) {
-      setError('Please upload both Poem A and Poem B files before running analysis.');
+      setError('Please upload both Poem A and Poem B files (or folders) before running analysis.');
       return;
     }
 
@@ -455,13 +496,60 @@ function KeynessAnalysis({ setKeynessImage, setOpenModal }) {
   return (
     <div className="keyness-section">
       <div className="file-upload">
-        <label className="file-label">Upload Poem A:</label>
-        <input type="file" accept=".txt,.docx,.doc" onChange={(e) => setPoemAFile(e.target.files[0])} />
+        <label className="file-label">Upload Poem A (file):</label>
+        <input
+          ref={poemAFileRef}
+          type="file"
+          accept=".txt,.docx,.doc"
+          onChange={(e) => {
+            if (e.target.files && e.target.files[0]) {
+              setPoemAFile(e.target.files[0]);
+              setError('');
+              if (poemAFolderRef.current) poemAFolderRef.current.value = ''; //reset folder input when other is used
+            }
+          }}
+        />
       </div>
+
       <div className="file-upload">
-        <label className="file-label">Upload Poem B:</label>
-        <input type="file" accept=".txt,.docx,.doc" onChange={(e) => setPoemBFile(e.target.files[0])} />
+        <label className="file-label">Upload Poem A (folder):</label>
+        <input
+          ref={poemAFolderRef}
+          type="file"
+          webkitdirectory="true"
+          directory="true"
+          multiple
+          onChange={handlePoemAFolder}
+        />
       </div>
+
+      <div className="file-upload">
+        <label className="file-label">Upload Poem B (file):</label>
+        <input
+          type="file"
+          accept=".txt,.docx,.doc"
+          onChange={(e) => {
+            if (e.target.files && e.target.files[0]) {
+              setPoemBFile(e.target.files[0]);
+              setError('');
+              if (poemBFolderRef.current) poemBFolderRef.current.value = ''; //reset folder input when other is used
+            }
+          }}
+        />
+      </div>
+
+      <div className="file-upload">
+        <label className="file-label">Upload Poem B (folder):</label>
+        <input
+          ref={poemBFolderRef}
+          type="file"
+          webkitdirectory="true"
+          directory="true"
+          multiple
+          onChange={handlePoemBFolder}
+        />
+      </div>
+
       <button onClick={handleSubmit} disabled={loading}>
         {loading ? 'Running Analysis...' : 'Run Keyness Analysis'}
       </button>
@@ -476,4 +564,3 @@ function KeynessAnalysis({ setKeynessImage, setOpenModal }) {
 }
 
 export default ResultsPage;
-

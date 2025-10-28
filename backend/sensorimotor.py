@@ -26,6 +26,15 @@ def get_norm(word):
     return None
 
 def sensory_norm(processed_text):
+    #Reset variables
+    sensory_norm_data.clear()
+    for key in perceptual_count.keys():
+        perceptual_count[key] = 0
+    for key in action_count.keys():
+        action_count[key] = 0
+    for key in sensorimotor_count.keys():
+        sensorimotor_count[key] = 0
+
     #Convert to uppercase for compatibility with norms dataset
     for i in range(len(processed_text)):
         processed_text[i] = processed_text[i].upper()

@@ -168,6 +168,10 @@ Poem-Pulse/
 
 ## Troubleshooting
 
+**Keyness graph showing incoherent words**
+- Keyness currently only supports text files (.txt)
+- Ensure uploaded folder only contains .txt files
+
 **Command not recognized**
 - Ensure npm is installed correctly: `npm -v` and `node -v`
 

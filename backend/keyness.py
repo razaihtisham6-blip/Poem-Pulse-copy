@@ -5,18 +5,10 @@ import pandas as pd
 import numpy as np
 import io, base64, re
 from collections import Counter
-import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from scipy.stats import fisher_exact
-
-# ✅ Download NLTK data if missing
-nltk.download('punkt', quiet=True)
-nltk.download('stopwords', quiet=True)
-nltk.download('wordnet', quiet=True)
-nltk.download('omw-1.4', quiet=True)
-nltk.download('punkt_tab', quiet=True)
 
 router = APIRouter(prefix="")
 
