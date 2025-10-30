@@ -1,6 +1,8 @@
 import './assets/ResultsPage.css';
 import { useState, useRef } from 'react';
 import Modal from './Modal';
+import Plot from 'react-plotly.js';
+import { useEffect } from 'react';
 
 function ResultsPage({ results, onBack }) {
   const [openModal, setOpenModal] = useState(null);
@@ -16,6 +18,9 @@ function ResultsPage({ results, onBack }) {
 
   //safety
   const sensorimotor = sensorimotorData && sensorimotorData.data ? sensorimotorData.data : sensorimotorData;
+
+  // At top of ResultsPage component, find the text (sample: from clusterData or results)
+  const userText = results?.text || results?.raw_text || null;
 
   return (
     <div className="results-container">
@@ -282,22 +287,20 @@ function ResultsPage({ results, onBack }) {
           title="Semantic Clustering Visualization"
           onClose={() => setOpenModal(null)}
         >
-          {clusterData && (clusterData.labeled || clusterData.plot) ? (
-            <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center'}}>
-              <img
-                src={`data:image/png;base64,${clusterData.labeled || clusterData.plot}`}
-                alt="Word clustering visualization"
-                style={{
-                  width:'100%',
-                  height:'100%',
-                  objectFit:'contain',
-                  borderRadius:12,
-                  display:'block'
-                }}
-              />
-            </div>
-          ) : (
-            <p>No clustering visualization available</p>
+          {openModal === 'cluster' && (
+            userText ? (
+              <ClusterPlot text={userText} />
+            ) : clusterData && (clusterData.labeled || clusterData.plot) ? (
+              <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                <img
+                  src={`data:image/png;base64,${clusterData.labeled || clusterData.plot}`}
+                  alt="Word clustering visualization"
+                  style={{width:'100%', height:'100%', objectFit:'contain', borderRadius:12, display:'block'}}
+                />
+              </div>
+            ) : (
+              <p>No clustering visualization available</p>
+            )
           )}
         </Modal>
 
@@ -560,6 +563,87 @@ function KeynessAnalysis({ setKeynessImage, setOpenModal }) {
         </div>
       )}
     </div>
+  );
+}
+
+function ClusterPlot({ text }) {
+  const [points, setPoints] = useState([]);
+  const [summaries, setSummaries] = useState([]);
+  useEffect(() => {
+    if (!text) return;
+    fetch('http://127.0.0.1:8000/cluster-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setPoints(data.points || []);
+        setSummaries(data.summaries || []);
+      });
+  }, [text]);
+
+  if (!points.length) return <p>No clustering data.</p>;
+
+  // Unique clusters for sidebar ordering and color mapping
+  const uniqueClusters = Array.from(new Set(points.map(p => p.cluster_label)));
+
+  // Use a categorical color palette for clusters (use Plotly's safe palette)
+  const CATEGORY_COLORS = [
+    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
+    '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+    '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5', '#c49c94',
+    '#f7b6d2', '#c7c7c7', '#dbdb8d', '#9edae5'
+  ];
+  const clusterLabelToColor = (label) => CATEGORY_COLORS[label % CATEGORY_COLORS.length];
+
+  // Position summaries evenly vertically on the right side (x=1.06, y from 0.95 to 0)
+  const annotations = summaries.map((s, i) => ({
+    text: `<b>Cluster ${s.cluster_label}</b>: ${s.summary.replace(/Cluster \\d+: /, '')}`,
+    xref: 'paper',
+    yref: 'paper',
+    x: 1.06,
+    xanchor: 'left',
+    y: 0.95 - (i / Math.max(1, summaries.length-1)) * 0.9,
+    yanchor: 'middle',
+    align: 'left',
+    showarrow: false,
+    font: {size: 13, color: clusterLabelToColor(s.cluster_label)},
+    borderpad: 4,
+    bgcolor: 'rgba(255,255,255,0.93)',
+    bordercolor: '#bbb',
+    borderwidth: 1,
+  }));
+
+  return (
+    <Plot
+      data={[{
+        x: points.map(p => p.x),
+        y: points.map(p => p.y),
+        marker: {
+          size: 12,
+          color: points.map(p => clusterLabelToColor(p.cluster_label)),
+          opacity: 0.92
+        },
+        mode: 'markers+text',
+        type: 'scatter',
+        text: points.map(p => p.word),
+        textposition: 'top center',
+        hovertext: points.map(p => `Cluster ${p.cluster_label}`),
+        hoverinfo: 'text',
+      }]}
+      layout={{
+        title: 'Semantic Cluster Graph',
+        xaxis: { title: 'TSNE-1', zeroline: false, showgrid: false },
+        yaxis: { title: 'TSNE-2', zeroline: false, showgrid: false },
+        hovermode: 'closest',
+        margin: { l: 40, r: 220, t: 40, b: 50 },
+        plot_bgcolor: '#fafafc', paper_bgcolor: '#fff',
+        annotations,
+      }}
+      config={{ responsive: true }}
+      style={{ width: '100%', height: '520px' }}
+    />
   );
 }
 

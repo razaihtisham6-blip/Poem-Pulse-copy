@@ -1,5 +1,5 @@
 # ----------------- CLEAN + FIXED BACKEND -----------------
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import io, os, asyncio, re
@@ -135,7 +135,8 @@ async def analyse(file: UploadFile):
         return JSONResponse(content={
             "cluster": cluster_data,
             "ratings": rating,
-            "sensorimotor": sensor
+            "sensorimotor": sensor,
+            "text": text  # include user text for frontend Plotly
         })
     except Exception as e:
         print(f"Error processing file: {e}")
@@ -161,11 +162,23 @@ async def analyse_text(payload: TextPayload):
         return JSONResponse(content={
             "cluster": cluster_data,
             "ratings": rating,
-            "sensorimotor": sensor
+            "sensorimotor": sensor,
+            "text": text  # include user text for frontend Plotly
         })
     except Exception as e:
         print(f"Error processing raw text: {e}")
         return JSONResponse(content={"error": f"Failed to process text: {str(e)}"}, status_code=500)
+
+@app.post("/cluster-data")
+async def cluster_data(payload: dict):
+    text = payload.get("text", "")
+    if not text.strip():
+        return JSONResponse(content={"error": "No text provided."}, status_code=400)
+    from clusters import word_cluster
+    from backend import tokenize
+    tokens = tokenize(text)
+    result = word_cluster(tokens, return_data=True)
+    return JSONResponse(content={"points": result.get('points', []), "summaries": result.get('summaries', [])})
 
 # --------------------------------------------------------------------
 # ✅ SHUTDOWN ENDPOINT

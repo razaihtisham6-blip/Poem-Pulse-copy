@@ -189,10 +189,11 @@ def _wrap_columns(lines, n_cols):
     return col_texts, max_rows
 
 # ---------------- Public API ----------------
-def word_cluster(tokens: list[str]) -> dict[str, str]:
+def word_cluster(tokens: list[str], return_data: bool = False):
     """
-    Build a t-SNE word cluster plot and return a base64 PNG string.
+    Build a t-SNE word cluster plot and return a base64 PNG string or cluster data.
     Input: list of tokens (lowercased in your backend).
+    If return_data is True, return cluster node data for frontend JSON.
     """
     # 1) Stopwords (auto)
     stop = _get_stopwords()
@@ -209,6 +210,8 @@ def word_cluster(tokens: list[str]) -> dict[str, str]:
             seen.add(w)
 
     if len(words_all) < 3:
+        if return_data:
+            return []
         fig, ax = plt.subplots(figsize=(6, 4), dpi=150)
         ax.text(0.5, 0.5, "Not enough unique words", ha="center", va="center")
         ax.axis("off")
@@ -223,6 +226,8 @@ def word_cluster(tokens: list[str]) -> dict[str, str]:
     model = _get_model()
     words = [w for w in words_all if w in model]
     if len(words) < 3:
+        if return_data:
+            return []
         fig, ax = plt.subplots(figsize=(6, 4), dpi=150)
         ax.text(0.5, 0.5, "Too few in-vocab words", ha="center", va="center")
         ax.axis("off")
@@ -273,8 +278,25 @@ def word_cluster(tokens: list[str]) -> dict[str, str]:
     buf_simple.seek(0)
     b64_simple = base64.b64encode(buf_simple.read()).decode("ascii")
 
-    # 9B) Build summaries BEFORE plotting labeled figure
+    # 9B) Build summaries (names)
     summary_lines = _build_cluster_summaries(words, labels, X_reduced, top_n=5)
+    if return_data:
+        # Build cluster label → summary string map
+        cluster_summaries = []
+        for i, lab in enumerate(uniq):
+            cluster_summaries.append({
+                'cluster_label': int(lab),
+                'summary': summary_lines[i]
+            })
+        out = []
+        for idx, (x, y, label) in enumerate(zip(X_2d[:, 0], X_2d[:, 1], labels)):
+            out.append({
+                'x': float(x),
+                'y': float(y),
+                'word': words[idx],
+                'cluster_label': int(label)
+            })
+        return {'points': out, 'summaries': cluster_summaries}
 
     # ----- Layout for neat, non-overlapping summaries -----
     K_now = len(uniq)
