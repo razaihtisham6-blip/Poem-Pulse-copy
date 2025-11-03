@@ -206,6 +206,21 @@ The application uses hot-reload for both frontend and backend development. Chang
 
 Press `Ctrl+C` to stop both servers.
 
+## External Dependencies
+
+**Pretrained word embeddings**
+This project includes the **glove-wiki-gigaword-50** pretrained word embeddings derived from the GloVe project.
+Licensed under the Open Data Commons Public Domain Dedication and License v1.0
+The word embeddings were obtained through Genism and saved as Gensim KeyedVectors for offline use
+
+**Lancastor Sensorimotor Norms**
+This project includes the **Lancaster Sensorimotor Norms** dataset
+(Lynott, D., Connell, L., Brand, J., Brysbaert, M., & Carney, J., 2024)
+Licensed under the Creative Commons Attribution 4.0 International
+
+Citation:
+"Lancaster_sensorimotor_norms_for_39707_words.csv" by (Lynott, D., Connell, L., Brand, J., Brysbaert, M., & Carney, J.), licensed under CC-By 4.0 Attribution 4.0 International. Retrieved from osf.io/rwhs6
+
 ## License
 
-MIT License - see LICENSE file for details.
+Apache 2.0 License - see LICENSE file for details.
