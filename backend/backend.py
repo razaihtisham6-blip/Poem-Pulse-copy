@@ -142,33 +142,6 @@ async def analyse(file: UploadFile):
         print(f"Error processing file: {e}")
         return JSONResponse(content={"error": f"Failed to process file: {str(e)}"}, status_code=500)
 
-@app.post("/analyse-text")
-async def analyse_text(payload: TextPayload):
-    try:
-        text = payload.text or ""
-        if not text.strip():
-            return JSONResponse(content={"error": "No text provided."}, status_code=400)
-
-        text_processed = tokenize(text)
-        cluster_imgs = word_cluster(text_processed)
-        rating = ratings(text_processed)
-        sensor = sensory_norm(text_processed)
-
-        cluster_data = {
-            "simple": cluster_imgs.get("simple", ""),
-            "labeled": cluster_imgs.get("labeled", "")
-        }
-
-        return JSONResponse(content={
-            "cluster": cluster_data,
-            "ratings": rating,
-            "sensorimotor": sensor,
-            "text": text  # include user text for frontend Plotly
-        })
-    except Exception as e:
-        print(f"Error processing raw text: {e}")
-        return JSONResponse(content={"error": f"Failed to process text: {str(e)}"}, status_code=500)
-
 @app.post("/cluster-data")
 async def cluster_data(payload: dict):
     text = payload.get("text", "")

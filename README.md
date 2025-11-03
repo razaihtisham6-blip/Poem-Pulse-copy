@@ -23,7 +23,7 @@ A powerful poetry analysis web application that provides deep linguistic insight
 ### Prerequisites
 
 - **Node.js** (v14+) and **npm**
-- **Python** (v3.9+)
+- **Python** (v3.9+) (Tested on Python 3.11)
 - You can install these from their respective websites
 
 ### 1. Install Dependencies
@@ -178,6 +178,13 @@ Poem-Pulse/
 **Gensim install error**
 - Try: `pip install --only-binary :all: gensim`
 - If it still fails, install a C++ compiler for your operating system
+
+**Python library conflict**
+- If unable to install any package due to version conflicts or other library conflicts
+- Download and install Python 3.11
+- `Python3.11 -m venv my_venv`
+- `cd my_venv`
+- Follow the installation steps
 
 **Single command not working:**
 - Ensure all dependencies installed: `npm install` and `pip install ...`
