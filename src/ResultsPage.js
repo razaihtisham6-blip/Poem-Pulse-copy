@@ -9,8 +9,12 @@ function ResultsPage({ results, onBack }) {
   const [sentimentView, setSentimentView] = useState('positive');
   const [sentimentOrder, setSentimentOrder] = useState('desc');
   const [keynessImage, setKeynessImage] = useState(null);
-
-  if (!results) return <p>No results received.</p>;
+  const [frequencyData, setFrequencyData] = useState(null);
+  const [keynessChoiceOpen, setKeynessChoiceOpen] = useState(false);
+  const [loadInteractive, setLoadInteractive] = useState(false);
+  const [interactiveLoading, setInteractiveLoading] = useState(false);
+  const [interactiveError, setInteractiveError] = useState(null);
+  const [interactiveReloadCounter, setInteractiveReloadCounter] = useState(0);
 
   const sentimentData = results.ratings;
   const clusterData = results.cluster;
@@ -22,6 +26,18 @@ function ResultsPage({ results, onBack }) {
   // At top of ResultsPage component, find the text (sample: from clusterData or results)
   const userText = results?.text || results?.raw_text || null;
 
+  // Reset interactive state when modal closes or changes
+  useEffect(() => {
+    if (openModal !== 'cluster') {
+      setLoadInteractive(false);
+      setInteractiveLoading(false);
+      setInteractiveError(null);
+      setInteractiveReloadCounter(0);
+    }
+  }, [openModal]);
+
+  if (!results) return <p>No results received.</p>;
+
   return (
     <div className="results-container">
       <div className="results-content">
@@ -29,18 +45,45 @@ function ResultsPage({ results, onBack }) {
         <h3 className="results-subtitle">Click on panels to view more information</h3>
 
         <div className="results-grid">
-          {/* 🔁 Keyness Statistics Panel */}
-          <div className="results-panel" style={{ cursor: 'default' }}>
-            <h2 className="panel-title">Keyness Statistics</h2>
-            <div className="panel-content">
+          {/* 🔁 Word Frequency Panel */}
+          <div
+            className="results-panel"
+            onClick={() => setOpenModal('frequency')}
+            style={{ cursor: 'zoom-in' }}
+          >
+            <h2 className="panel-title">Word Frequency Analysis</h2>
+            <div className="panel-content" style={{ position: 'relative' }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); setKeynessChoiceOpen(true); }}
+                title="Open Keyness (A vs B)"
+                aria-label="Open Keyness"
+                style={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 8,
+                  zIndex: 2,
+                  padding: '6px 10px',
+                  background: '#ffffff',
+                  color: '#333',
+                  fontWeight: 600,
+                  border: '1px solid #ccc',
+                  borderRadius: 6,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                  cursor: 'pointer'
+                }}
+              >
+                Keyness
+              </button>
               <div className="placeholder-content">
-                <KeynessAnalysis
-                  setKeynessImage={setKeynessImage}
-                  setOpenModal={setOpenModal}
+                <WordFrequencyPreview
+                  text={userText}
+                  onData={setFrequencyData}
                 />
               </div>
             </div>
           </div>
+
+          {/* (Removed) Keyness Statistics Panel */}
 
           {/* Semantic Clustering Panel */}
           <div
@@ -281,6 +324,47 @@ function ResultsPage({ results, onBack }) {
             <p>No keyness chart available</p>
           )}
         </Modal>
+        {/* 🧩 Modal for Keyness choice (File vs Folder for Poem B) */}
+        <Modal
+          open={keynessChoiceOpen}
+          title="Keyness: Choose Poem B Source"
+          onClose={() => setKeynessChoiceOpen(false)}
+        >
+          <KeynessChooser
+            userText={userText}
+            onImage={(img) => { setKeynessImage(img); setOpenModal('keyness'); setKeynessChoiceOpen(false); }}
+          />
+        </Modal>
+        {/* 🧩 Modal for Word Frequency */}
+        <Modal
+          open={openModal === 'frequency'}
+          title="Word Frequency"
+          onClose={() => setOpenModal(null)}
+          fullscreen
+        >
+          {frequencyData ? (
+            <div style={{width:'100%', height:'100%'}}>
+              <Plot
+                data={[{
+                  type: 'bar',
+                  x: frequencyData.words,
+                  y: frequencyData.freqs,
+                  marker: { color: '#4f46e5' }
+                }]}
+                layout={{
+                  title: 'Top Word Relative Frequencies',
+                  xaxis: { title: 'Word' },
+                  yaxis: { title: 'Proportion', rangemode: 'tozero' },
+                  margin: { l: 60, r: 20, t: 50, b: 120 },
+                }}
+                config={{ responsive: true }}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+          ) : (
+            <p>No word frequency data available</p>
+          )}
+        </Modal>
         {/* 🧩 Modal for Semantic Clustering */}
         <Modal
           open={openModal === 'cluster'}
@@ -288,19 +372,64 @@ function ResultsPage({ results, onBack }) {
           onClose={() => setOpenModal(null)}
         >
           {openModal === 'cluster' && (
-            userText ? (
-              <ClusterPlot text={userText} />
-            ) : clusterData && (clusterData.labeled || clusterData.plot) ? (
-              <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center'}}>
-                <img
-                  src={`data:image/png;base64,${clusterData.labeled || clusterData.plot}`}
-                  alt="Word clustering visualization"
-                  style={{width:'100%', height:'100%', objectFit:'contain', borderRadius:12, display:'block'}}
+            <div style={{position:'relative', width:'100%', height:'100%'}}>
+              {userText && loadInteractive ? (
+                <ClusterPlot
+                  text={userText}
+                  refreshToken={interactiveReloadCounter}
+                  onLoadingChange={setInteractiveLoading}
+                  onError={setInteractiveError}
+                  fallbackImage={clusterData && (clusterData.labeled || clusterData.plot || clusterData.simple) ? `data:image/png;base64,${clusterData.labeled || clusterData.plot || clusterData.simple}` : null}
                 />
-              </div>
-            ) : (
-              <p>No clustering visualization available</p>
-            )
+              ) : clusterData && (clusterData.labeled || clusterData.plot) ? (
+                <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center'}}>
+                  <img
+                    src={`data:image/png;base64,${clusterData.labeled || clusterData.plot}`}
+                    alt="Word clustering visualization"
+                    style={{width:'100%', height:'100%', objectFit:'contain', borderRadius:12, display:'block'}}
+                  />
+                </div>
+              ) : (
+                <p>No clustering visualization available</p>
+              )}
+              {userText && (
+                (!loadInteractive || interactiveLoading || interactiveError) && (
+                  <button
+                    onClick={() => {
+                      if (!loadInteractive) {
+                        setLoadInteractive(true);
+                        setInteractiveLoading(true);
+                        setInteractiveError(null);
+                      } else if (interactiveError) {
+                        setInteractiveLoading(true);
+                        setInteractiveError(null);
+                        setInteractiveReloadCounter(c => c + 1);
+                      }
+                    }}
+                    style={{
+                      position:'absolute',
+                      top: 8,
+                      right: 8,
+                      zIndex: 2,
+                      padding: '6px 12px',
+                      background:'#ffffff',
+                      color:'#333',
+                      fontWeight: 600,
+                      border:'1px solid #ccc',
+                      borderRadius: 6,
+                      boxShadow:'0 2px 8px rgba(0,0,0,0.15)',
+                      cursor: interactiveLoading ? 'default' : 'pointer',
+                      opacity: interactiveLoading ? 0.7 : 1
+                    }}
+                    title={interactiveLoading ? 'Loading graph...' : (interactiveError ? 'Retry interactive graph' : 'Load interactive graph')}
+                    aria-label={interactiveLoading ? 'Loading graph' : (interactiveError ? 'Retry interactive graph' : 'Load interactive graph')}
+                    disabled={interactiveLoading}
+                  >
+                    {interactiveLoading ? 'Loading graph...' : (interactiveError ? 'Retry interactive' : 'Load interactive graph')}
+                  </button>
+                )
+              )}
+            </div>
           )}
         </Modal>
 
@@ -404,186 +533,132 @@ function ResultsPage({ results, onBack }) {
   );
 }
 
+function WordFrequencyPreview({ text, onData }) {
+  const [top, setTop] = useState([]);
 
-function KeynessAnalysis({ setKeynessImage, setOpenModal }) {
-  const [poemAFile, setPoemAFile] = useState(null);
-  const [poemBFile, setPoemBFile] = useState(null);
-  const [imageSrc, setImageSrc] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const poemAFileRef = useRef(null);
-  const poemAFolderRef = useRef(null);
-  const poemBFileRef = useRef(null);
-  const poemBFolderRef = useRef(null);
-
-  //combine .txt files into a single file
-  const combineTextFiles = async (fileList) => {
-    const files = Array.from(fileList).filter(f => {
-      const ext = '.' + f.name.split('.').pop().toLowerCase();
-      return ext === '.txt';
-    });
-    if (files.length === 0) return null;
-    const texts = await Promise.all(files.map(f => f.text()));
-    const combined = texts.join('\n\n');
-    const blob = new Blob([combined], { type: 'text/plain' });
-    const pseudo = new File([blob], 'batch_combined.txt', { type: 'text/plain' });
-    return pseudo;
-  };
-
-  //folder input helpers
-  const handlePoemAFolder = async (e) => {
-    const pseudo = await combineTextFiles(e.target.files);
-    if (pseudo) {
-      setPoemAFile(pseudo);
-      setError('');
-      if (poemAFileRef.current) poemAFileRef.current.value = ''; //reset file input when other is used
-    } else {
-      setError('No .txt files found in selected Poem A folder');
-    }
-  };
-  const handlePoemBFolder = async (e) => {
-    const pseudo = await combineTextFiles(e.target.files);
-    if (pseudo) {
-      setPoemBFile(pseudo);
-      setError('');
-      if (poemBFileRef.current) poemBFileRef.current.value = ''; //reset file input when other is used
-    } else {
-      setError('No .txt files found in selected Poem B folder');
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!poemAFile || !poemBFile) {
-      setError('Please upload both Poem A and Poem B files (or folders) before running analysis.');
+  useEffect(() => {
+    if (!text) {
+      setTop([]);
+      if (onData) onData(null);
       return;
     }
-
-    setLoading(true);
-    setError(null);
-
-    const formData = new FormData();
-    formData.append('poemA', poemAFile);
-    formData.append('poemB', poemBFile);
-
-    try {
-      const response = await fetch('http://127.0.0.1:8000/keyness', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error('❌ Backend error:', data);
-        setError(data.error || 'Failed to generate keyness plot.');
-        return;
-      }
-
-      if (data.image) {
-        const img = `data:image/png;base64,${data.image}`;
-        setImageSrc(img);
-        setKeynessImage(img);
-        console.log('✅ Keyness image received successfully.');
-      } else {
-        setError('No image returned from backend.');
-      }
-    } catch (err) {
-      console.error('❌ Network error:', err);
-      setError('Error connecting to backend. Make sure it is running.');
-    } finally {
-      setLoading(false);
+    const tokens = text
+      .toLowerCase()
+      .replace(/[^a-z\s]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
+    const total = tokens.length;
+    const counts = new Map();
+    for (const w of tokens) {
+      if (w.length <= 0) continue;
+      counts.set(w, (counts.get(w) || 0) + 1);
     }
-  };
+    const sorted = Array.from(counts.entries()).sort((a,b)=>b[1]-a[1]);
+    const preview = sorted.slice(0, 15).map(([w,c]) => [w, c/total]);
+    setTop(preview);
+    if (onData) onData({ words: sorted.slice(0,50).map(([w])=>w), freqs: sorted.slice(0,50).map(([,c])=>c/total), total });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text]);
 
   return (
-    <div className="keyness-section">
-      <div className="file-upload">
-        <label className="file-label">Upload Poem A (file):</label>
-        <input
-          ref={poemAFileRef}
-          type="file"
-          accept=".txt,.docx,.doc"
-          onChange={(e) => {
-            if (e.target.files && e.target.files[0]) {
-              setPoemAFile(e.target.files[0]);
-              setError('');
-              if (poemAFolderRef.current) poemAFolderRef.current.value = ''; //reset folder input when other is used
-            }
-          }}
-        />
-      </div>
-
-      <div className="file-upload">
-        <label className="file-label">Upload Poem A (folder):</label>
-        <input
-          ref={poemAFolderRef}
-          type="file"
-          webkitdirectory="true"
-          directory="true"
-          multiple
-          onChange={handlePoemAFolder}
-        />
-      </div>
-
-      <div className="file-upload">
-        <label className="file-label">Upload Poem B (file):</label>
-        <input
-          type="file"
-          accept=".txt,.docx,.doc"
-          onChange={(e) => {
-            if (e.target.files && e.target.files[0]) {
-              setPoemBFile(e.target.files[0]);
-              setError('');
-              if (poemBFolderRef.current) poemBFolderRef.current.value = ''; //reset folder input when other is used
-            }
-          }}
-        />
-      </div>
-
-      <div className="file-upload">
-        <label className="file-label">Upload Poem B (folder):</label>
-        <input
-          ref={poemBFolderRef}
-          type="file"
-          webkitdirectory="true"
-          directory="true"
-          multiple
-          onChange={handlePoemBFolder}
-        />
-      </div>
-
-      <button onClick={handleSubmit} disabled={loading}>
-        {loading ? 'Running Analysis...' : 'Run Keyness Analysis'}
-      </button>
-      {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
-      {imageSrc && (
-        <div className="chart-container" onClick={() => setOpenModal('keyness')} style={{ cursor: 'zoom-in', marginTop: '15px' }}>
-          <img src={imageSrc} alt="Keyness Chart" />
-        </div>
-      )}
+    <div className="sentiment-analysis">
+      <p className="sentiment-description">Most frequent content words in your text:</p>
+      <ul className="sentiment-items">
+        {top.map(([word, freq]) => (
+          <li key={word} className="sentiment-item">
+            <span className="word">{word}</span>
+            <span className="sentiment-score neutral">{freq.toFixed(3)}</span>
+          </li>
+        ))}
+      </ul>
+      {(!top || top.length === 0) && <p>No frequency data found</p>}
     </div>
   );
 }
 
-function ClusterPlot({ text }) {
+function ClusterPlot({ text, fallbackImage, onLoadingChange, onError, refreshToken }) {
   const [points, setPoints] = useState([]);
   const [summaries, setSummaries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   useEffect(() => {
     if (!text) return;
+    setLoading(true);
+    setError(null);
+    if (onLoadingChange) onLoadingChange(true);
+    if (onError) onError(null);
     fetch('http://127.0.0.1:8000/cluster-data', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
     })
-      .then(res => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `HTTP ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
         setPoints(data.points || []);
         setSummaries(data.summaries || []);
+      })
+      .catch((e) => {
+        setError(e.message);
+        if (onError) onError(e.message);
+      })
+      .finally(() => {
+        setLoading(false);
+        if (onLoadingChange) onLoadingChange(false);
       });
-  }, [text]);
+  }, [text, refreshToken]);
 
-  if (!points.length) return <p>No clustering data.</p>;
+  // While loading, show the static fallback image if provided
+  if (loading && fallbackImage) {
+    return (
+      <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center'}}>
+        <img
+          src={fallbackImage}
+          alt="Word clustering (loading interactive view)"
+          style={{width:'100%', height:'100%', objectFit:'contain', borderRadius:12, display:'block'}}
+        />
+      </div>
+    );
+  }
+
+  if (error && fallbackImage) {
+    return (
+      <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column'}}>
+        <img
+          src={fallbackImage}
+          alt="Word clustering (interactive failed)"
+          style={{width:'100%', height:'100%', objectFit:'contain', borderRadius:12, display:'block'}}
+        />
+        <p style={{marginTop:8, color:'#b00'}}>Interactive view failed: {error}</p>
+      </div>
+    );
+  }
+
+  if (!points.length) {
+    return fallbackImage ? (
+      <div style={{width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center'}}>
+        <img
+          src={fallbackImage}
+          alt="Word clustering"
+          style={{width:'100%', height:'100%', objectFit:'contain', borderRadius:12, display:'block'}}
+        />
+      </div>
+    ) : <p>No clustering data.</p>;
+  }
+
+  // Helper to strip any leading "Cluster n:" prefix (handles spaces/unicode and case)
+  const stripClusterPrefix = (txt) => {
+    if (!txt || typeof txt !== 'string') return '';
+    const cleaned = txt.replace(/^[\s\u00A0]*Cluster\s+\d+\s*:\s*/i, '');
+    if (cleaned !== txt) return cleaned;
+    const idx = txt.indexOf(':');
+    return idx >= 0 ? txt.slice(idx + 1).trim() : txt;
+  };
 
   // Unique clusters for sidebar ordering and color mapping
   const uniqueClusters = Array.from(new Set(points.map(p => p.cluster_label)));
@@ -599,7 +674,7 @@ function ClusterPlot({ text }) {
 
   // Position summaries evenly vertically on the right side (x=1.06, y from 0.95 to 0)
   const annotations = summaries.map((s, i) => ({
-    text: `<b>Cluster ${s.cluster_label}</b>: ${s.summary.replace(/Cluster \\d+: /, '')}`,
+    text: `<b>Cluster ${s.cluster_label}</b>: ${stripClusterPrefix(s.summary)}`,
     xref: 'paper',
     yref: 'paper',
     x: 1.06,
@@ -615,6 +690,12 @@ function ClusterPlot({ text }) {
     borderwidth: 1,
   }));
 
+  // Build hover entities per cluster from summaries
+  const clusterEntitiesByLabel = summaries.reduce((acc, s) => {
+    acc[s.cluster_label] = stripClusterPrefix(s.summary);
+    return acc;
+  }, {});
+
   return (
     <Plot
       data={[{
@@ -629,8 +710,9 @@ function ClusterPlot({ text }) {
         type: 'scatter',
         text: points.map(p => p.word),
         textposition: 'top center',
-        hovertext: points.map(p => `Cluster ${p.cluster_label}`),
+        hovertext: points.map(p => `Cluster ${p.cluster_label}: ${clusterEntitiesByLabel[p.cluster_label] || ''}`),
         hoverinfo: 'text',
+        hovertemplate: '%{hovertext}<extra></extra>',
       }]}
       layout={{
         title: 'Semantic Cluster Graph',
@@ -644,6 +726,97 @@ function ClusterPlot({ text }) {
       config={{ responsive: true }}
       style={{ width: '100%', height: '520px' }}
     />
+  );
+}
+
+function KeynessChooser({ userText, onImage }) {
+  const [bFile, setBFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const fileRef = useRef(null);
+  const folderRef = useRef(null);
+
+  const combineTextFiles = async (fileList) => {
+    const files = Array.from(fileList).filter(f => ('.' + f.name.split('.').pop().toLowerCase()) === '.txt');
+    if (!files.length) return null;
+    const texts = await Promise.all(files.map(f => f.text()));
+    return new File([new Blob([texts.join('\n\n')], { type: 'text/plain' })], 'batch_combined.txt', { type: 'text/plain' });
+  };
+
+  const runKeyness = async (aTextFile, bTextFile) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append('poemA', aTextFile);
+      formData.append('poemB', bTextFile);
+      const response = await fetch('http://127.0.0.1:8000/keyness', { method: 'POST', body: formData });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to generate keyness plot');
+      if (data.image && onImage) onImage(`data:image/png;base64,${data.image}`);
+    } catch (e) {
+      setError(e.message || String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const buildATextFile = () => {
+    const text = typeof userText === 'string' ? userText : '';
+    return new File([new Blob([text], { type: 'text/plain' })], 'analysed_text.txt', { type: 'text/plain' });
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <p style={{ margin: 0 }}>Select Poem B to compare against your analysed text.</p>
+      {/* Hidden inputs */}
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".txt,.docx,.doc"
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          const f = e.target.files && e.target.files[0];
+          if (f) { setBFile(f); setError(null); }
+        }}
+      />
+      <input
+        ref={folderRef}
+        type="file"
+        webkitdirectory="true"
+        directory="true"
+        multiple
+        style={{ display: 'none' }}
+        onChange={async (e) => {
+          const pseudo = await combineTextFiles(e.target.files);
+          if (pseudo) { setBFile(pseudo); setError(null); }
+          else { setError('No .txt files found in selected folder'); }
+        }}
+      />
+      {/* Visible actions */}
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', minHeight: 80 }}>
+        <button
+          className="next-button"
+          onClick={() => fileRef.current && fileRef.current.click()}
+        >
+          Upload File
+        </button>
+        <button
+          className="next-button"
+          onClick={() => folderRef.current && folderRef.current.click()}
+        >
+          Upload Folder
+        </button>
+      </div>
+      <button
+        className="next-button"
+        disabled={loading || !bFile || !userText}
+        onClick={() => runKeyness(buildATextFile(), bFile)}
+      >
+        {loading ? 'Running Analysis...' : 'Run Keyness Analysis'}
+      </button>
+      {error && <p style={{ color: '#b00', marginTop: 6 }}>{error}</p>}
+    </div>
   );
 }
 

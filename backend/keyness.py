@@ -8,11 +8,28 @@ from collections import Counter
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+import nltk
 from scipy.stats import fisher_exact
 
 router = APIRouter(prefix="")
 
-# ✅ Initialize stopwords and lemmatizer
+# ✅ Ensure required NLTK resources are available (first-run friendly)
+def _ensure_nltk_data():
+    resources = [
+        ("stopwords", "corpora/stopwords"),
+        ("punkt", "tokenizers/punkt"),
+        ("wordnet", "corpora/wordnet"),
+        ("omw-1.4", "corpora/omw-1.4"),  # wordnet lemmatizer synonyms
+    ]
+    for pkg, path in resources:
+        try:
+            nltk.data.find(path)
+        except LookupError:
+            nltk.download(pkg, quiet=True)
+
+_ensure_nltk_data()
+
+# ✅ Initialize stopwords and lemmatizer after ensuring data
 STOPWORDS = set(stopwords.words('english'))
 LEMMATIZER = WordNetLemmatizer()
 
@@ -56,13 +73,14 @@ async def keyness(poemA: UploadFile = File(...), poemB: UploadFile = File(...)):
 
         df = pd.DataFrame(data, columns=["word", "countA", "countB", "effect", "p"])
 
-        # ✅ Sort by absolute effect size and take top 30
+        # ✅ Sort by absolute effect size (show ALL results, no truncation)
         df_plot = df.reindex(df["effect"].abs().sort_values(ascending=False).index)
-        df_plot = df_plot.head(30)
 
-        # ✅ Create clean symmetric diverging plot
-        plt.figure(figsize=(9, 10))
-        y = np.arange(len(df_plot))
+        # ✅ Create clean symmetric diverging plot with dynamic height so all items are visible
+        num_items = max(1, len(df_plot))
+        fig_height = max(6.0, min(0.32 * num_items, 30.0))  # scale height to items; cap for safety
+        plt.figure(figsize=(10, fig_height))
+        y = np.arange(num_items)
 
         # Symmetrical layout for both sides
         max_effect = np.ceil(np.max(np.abs(df_plot["effect"])))
@@ -73,7 +91,7 @@ async def keyness(poemA: UploadFile = File(...), poemB: UploadFile = File(...)):
 
         plt.barh(y, df_plot["effect"], color=colors)
         plt.axvline(0, color="black", linewidth=1)
-        plt.yticks(y, df_plot["word"], fontsize=9)
+        plt.yticks(y, df_plot["word"], fontsize=8)
         plt.title("   Keyness Comparison: Poem A vs Poem B", fontsize=13)
         plt.xlabel("Effect Size (log₂ ratio)")
 
