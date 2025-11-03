@@ -165,7 +165,7 @@ function ExitPage({ results, onUploadAnother, onExit }) {
       if (results.ratings) {
         if (y > pageH - margin - 180) { doc.addPage(); y = margin; }
         doc.setFontSize(14);
-        doc.text('SENTIMENT ANALYSIS', margin, y); y += 14;
+        doc.text('SENTIMENT ANALYSIS (Top 15)', margin, y); y += 14;
         doc.setFontSize(11);
         const valid = Object.entries(results.ratings).filter(([_, s]) => s !== null);
         if (valid.length) {
@@ -185,7 +185,7 @@ function ExitPage({ results, onUploadAnother, onExit }) {
       if (results.sensorimotor) {
         if (y > pageH - margin - 220) { doc.addPage(); y = margin; }
         doc.setFontSize(14);
-        doc.text('SENSORIMOTOR ANALYSIS', margin, y); y += 14;
+        doc.text('SENSORIMOTOR ANALYSIS (Top 5)', margin, y); y += 14;
         doc.setFontSize(11);
         const sensorObj = results.sensorimotor && results.sensorimotor.data ? results.sensorimotor.data : results.sensorimotor;
         const topWords = Object.entries(sensorObj).slice(0, 5);

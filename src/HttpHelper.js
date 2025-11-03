@@ -18,24 +18,6 @@ export function analyzeFile(file) {
     });
 }
 
-export function analyzeText(text) {
-    return fetch("http://127.0.0.1:8000/analyse-text", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
-    }).then(async (res) => {
-        if (!res.ok) {
-            try {
-                const errorData = await res.json();
-                throw new Error(errorData.error || "Backend processing error");
-            } catch (parseError) {
-                throw new Error(`Server error (${res.status})`);
-            }
-        }
-        return res.json();
-    });
-}
-
 export async function sendShutdown() {
     try {
         const response = await fetch("http://127.0.0.1:8000/shutdown", {
