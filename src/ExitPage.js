@@ -31,8 +31,9 @@ function ExitPage({ results, onUploadAnother, onExit }) {
       URL.revokeObjectURL(url);
     }
     
+    
     else if (format === 'png') {
-      const plotB64 = results?.cluster?.plot || '';
+      const plotB64 = results?.cluster?.labeled || results.cluster?.simple || '';
       if (!plotB64) return;
       const href = plotB64.startsWith('data:image') ? plotB64 : `data:image/png;base64,${plotB64}`;
       const link = document.createElement('a');
@@ -48,8 +49,8 @@ function ExitPage({ results, onUploadAnother, onExit }) {
       content += `SUMMARY:\n`;
       content += `${generateSummaryText()}\n\n`;
       
-      if (results.relative_frequency) {
-        content += `WORD FREQUENCY ANALYSIS:\n`;
+      if (results.relative_frequency) { // Top 20 words
+        content += `WORD FREQUENCY ANALYSIS (Top 20):\n`;
         Object.entries(results.relative_frequency).slice(0, 20).forEach(([word, freq]) => {
           content += `${word}: ${(freq * 100).toFixed(2)}%\n`;
         });
@@ -70,16 +71,16 @@ function ExitPage({ results, onUploadAnother, onExit }) {
         content += `\n`;
       }
       
-      if (results.sensorimotor) {
-        content += `SENSORIMOTOR ANALYSIS:\n`;
-        Object.entries(results.sensorimotor).slice(0, 5).forEach(([word, norms]) => {
-          if (norms) {
-            content += `${word}:\n`;
-            Object.entries(norms).slice(1, 6).forEach(([key, value]) => {
-              content += `  ${key.replace(/_/g, ' ')}: ${typeof value === 'number' ? value.toFixed(2) : value}\n`;
-            });
-            content += `\n`;
-          }
+      if (results.sensorimotor) { // Top 5 words
+        const sensorObj = results.sensorimotor && results.sensorimotor.data ? results.sensorimotor.data : results.sensorimotor;
+        content += `SENSORIMOTOR ANALYSIS (Top 5):\n`;
+        Object.entries(sensorObj).slice(0, 5).forEach(([word, norms]) => {
+          if (!norms) return;
+          content += `${word}:\n`;
+          Object.entries(norms).slice(1, 6).forEach(([key, value]) => {
+            content += `  ${key.replace(/_/g, ' ')}: ${typeof value === 'number' ? value.toFixed(2) : value}\n`;
+          });
+          content += `\n`;
         });
       }
 
@@ -123,10 +124,8 @@ function ExitPage({ results, onUploadAnother, onExit }) {
       doc.setFontSize(14);
       doc.text('SEMANTIC CLUSTERING VISUALIZATION', margin, y); y += 12;
 
-      const plotB64 = results?.cluster?.plot || '';
-      const imgData = plotB64.startsWith('data:image')
-        ? plotB64
-        : (plotB64 ? `data:image/png;base64,${plotB64}` : '');
+      const plotB64 = results?.cluster?.labeled || results.cluster?.simple || '';
+      const imgData = plotB64 ? (plotB64.startsWith('data:image') ? plotB64 : `data:image/png;base64,${plotB64}`) : '';
 
       if (imgData) {
         try {
@@ -188,7 +187,8 @@ function ExitPage({ results, onUploadAnother, onExit }) {
         doc.setFontSize(14);
         doc.text('SENSORIMOTOR ANALYSIS', margin, y); y += 14;
         doc.setFontSize(11);
-        const topWords = Object.entries(results.sensorimotor).slice(0, 3);
+        const sensorObj = results.sensorimotor && results.sensorimotor.data ? results.sensorimotor.data : results.sensorimotor;
+        const topWords = Object.entries(sensorObj).slice(0, 5);
         if (topWords.length === 0) {
           doc.text('(no sensorimotor values)', margin, y); y += 14;
         } else {

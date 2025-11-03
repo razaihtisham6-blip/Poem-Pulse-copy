@@ -12,7 +12,7 @@
   width: min(1000px, 92vw);
   max-height: 90vh;
   overflow: auto;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  background: radial-gradient(#281a49 0%, #0d1623 60%, #07121c 100%);
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: var(--shadow);
