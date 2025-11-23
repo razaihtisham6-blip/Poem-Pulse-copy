@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File 
 from fastapi.responses import JSONResponse
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -30,7 +30,16 @@ def _ensure_nltk_data():
 _ensure_nltk_data()
 
 # ✅ Initialize stopwords and lemmatizer after ensuring data
-STOPWORDS = set(stopwords.words('english'))
+BASE_STOPWORDS = set(stopwords.words('english'))
+
+# Extra “useless” words you don’t want in the analysis
+CUSTOM_STOPWORDS = {
+    "the", "s", "i", "im", "am", "is", "are", "was", "were",
+    "this", "that", "of", "to", "in", "it", "its", "for", "on",
+    "at", "by", "and", "or", "so", "but"
+}
+
+STOPWORDS = BASE_STOPWORDS.union(CUSTOM_STOPWORDS)
 LEMMATIZER = WordNetLemmatizer()
 
 
@@ -42,7 +51,8 @@ def clean_words(text: str):
     return [
         LEMMATIZER.lemmatize(w)
         for w in tokens
-        if w not in STOPWORDS and len(w) > 1
+        # remove stopwords + very short tokens (like "i", "am", "is", "of")
+        if w not in STOPWORDS and len(w) > 2
     ]
 
 
@@ -121,6 +131,7 @@ async def keyness(poemA: UploadFile = File(...), poemB: UploadFile = File(...)):
     except Exception as e:
         print("[ERROR] Keyness error:", e)
         return JSONResponse({"error": f"Keyness analysis failed: {e}"}, status_code=500)
+
 
 
 

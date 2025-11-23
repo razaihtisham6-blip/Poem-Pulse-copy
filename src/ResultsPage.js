@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import Modal from './Modal';
 import Plot from 'react-plotly.js';
 import { useEffect } from 'react';
+import { eng as STOPWORD_LIST } from 'stopword';
 
 function ResultsPage({ results, onBack }) {
   const [openModal, setOpenModal] = useState(null);
@@ -534,47 +535,77 @@ function ResultsPage({ results, onBack }) {
 }
 
 function WordFrequencyPreview({ text, onData }) {
-  const [top, setTop] = useState([]);
+  const [topWords, setTopWords] = useState([]);
+
+  const STOPWORDS = new Set(STOPWORD_LIST);
 
   useEffect(() => {
     if (!text) {
-      setTop([]);
+      setTopWords([]);
       if (onData) onData(null);
       return;
     }
-    const tokens = text
+
+    // basic tokenisation
+    const rawTokens = text
       .toLowerCase()
       .replace(/[^a-z\s]/g, ' ')
       .split(/\s+/)
       .filter(Boolean);
+
+    // remove stopwords + very short tokens
+    const tokens = rawTokens.filter(
+      (w) => !STOPWORDS.has(w) && w.length > 2
+    );
+
+    if (tokens.length === 0) {
+      setTopWords([]);
+      if (onData) onData(null);
+      return;
+    }
+
     const total = tokens.length;
     const counts = new Map();
+
     for (const w of tokens) {
-      if (w.length <= 0) continue;
       counts.set(w, (counts.get(w) || 0) + 1);
     }
-    const sorted = Array.from(counts.entries()).sort((a,b)=>b[1]-a[1]);
-    const preview = sorted.slice(0, 15).map(([w,c]) => [w, c/total]);
-    setTop(preview);
-    if (onData) onData({ words: sorted.slice(0,50).map(([w])=>w), freqs: sorted.slice(0,50).map(([,c])=>c/total), total });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+
+    const preview = sorted.slice(0, 15).map(([w, c]) => [w, c / total]);
+    setTopWords(preview);
+
+    if (onData) {
+      const top50 = sorted.slice(0, 50);
+      onData({
+        words: top50.map(([w]) => w),
+        freqs: top50.map(([, c]) => c / total),
+        total
+      });
+    }
   }, [text]);
 
   return (
     <div className="sentiment-analysis">
-      <p className="sentiment-description">Most frequent content words in your text:</p>
+      <p className="sentiment-description">
+        Most frequent content words in your text:
+      </p>
       <ul className="sentiment-items">
-        {top.map(([word, freq]) => (
+        {topWords.map(([word, freq]) => (
           <li key={word} className="sentiment-item">
             <span className="word">{word}</span>
-            <span className="sentiment-score neutral">{freq.toFixed(3)}</span>
+            <span className="sentiment-score neutral">
+              {freq.toFixed(3)}
+            </span>
           </li>
         ))}
       </ul>
-      {(!top || top.length === 0) && <p>No frequency data found</p>}
+      {(!topWords || topWords.length === 0) && <p>No frequency data found</p>}
     </div>
   );
 }
+
 
 function ClusterPlot({ text, fallbackImage, onLoadingChange, onError, refreshToken }) {
   const [points, setPoints] = useState([]);
