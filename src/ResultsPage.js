@@ -702,25 +702,6 @@ function ClusterPlot({ text, fallbackImage, onLoadingChange, onError, refreshTok
     '#f7b6d2', '#c7c7c7', '#dbdb8d', '#9edae5'
   ];
   const clusterLabelToColor = (label) => CATEGORY_COLORS[label % CATEGORY_COLORS.length];
-
-  // Position summaries evenly vertically on the right side (x=1.06, y from 0.95 to 0)
-  const annotations = summaries.map((s, i) => ({
-    text: `<b>Cluster ${s.cluster_label}</b>: ${stripClusterPrefix(s.summary)}`,
-    xref: 'paper',
-    yref: 'paper',
-    x: 1.06,
-    xanchor: 'left',
-    y: 0.95 - (i / Math.max(1, summaries.length-1)) * 0.9,
-    yanchor: 'middle',
-    align: 'left',
-    showarrow: false,
-    font: {size: 13, color: clusterLabelToColor(s.cluster_label)},
-    borderpad: 4,
-    bgcolor: 'rgba(255,255,255,0.93)',
-    bordercolor: '#bbb',
-    borderwidth: 1,
-  }));
-
   // Build hover entities per cluster from summaries
   const clusterEntitiesByLabel = summaries.reduce((acc, s) => {
     acc[s.cluster_label] = stripClusterPrefix(s.summary);
@@ -728,38 +709,92 @@ function ClusterPlot({ text, fallbackImage, onLoadingChange, onError, refreshTok
   }, {});
 
   return (
-    <Plot
-      data={[{
-        x: points.map(p => p.x),
-        y: points.map(p => p.y),
-        marker: {
-          size: 12,
-          color: points.map(p => clusterLabelToColor(p.cluster_label)),
-          opacity: 0.92
-        },
-        mode: 'markers+text',
-        type: 'scatter',
-        text: points.map(p => p.word),
-        textposition: 'top center',
-        hovertext: points.map(p => `Cluster ${p.cluster_label}: ${clusterEntitiesByLabel[p.cluster_label] || ''}`),
-        hoverinfo: 'text',
-        hovertemplate: '%{hovertext}<extra></extra>',
-      }]}
-      layout={{
-        title: 'Semantic Cluster Graph',
-        xaxis: { title: 'TSNE-1', zeroline: false, showgrid: false },
-        yaxis: { title: 'TSNE-2', zeroline: false, showgrid: false },
-        hovermode: 'closest',
-        margin: { l: 40, r: 220, t: 40, b: 50 },
-        plot_bgcolor: '#fafafc', paper_bgcolor: '#fff',
-        annotations,
+    <div
+      style={{
+        display: 'flex',
+        width: '100%',
+        height: '520px',
+        overflow: 'hidden',
       }}
-      config={{ responsive: true }}
-      style={{ width: '100%', height: '520px' }}
-    />
+    >
+      {/* left: interactive scatter plot */}
+      <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+        <Plot
+          data={[{
+            x: points.map(p => p.x),
+            y: points.map(p => p.y),
+            marker: {
+              size: 12,
+              color: points.map(p => clusterLabelToColor(p.cluster_label)),
+              opacity: 0.92
+            },
+            mode: 'markers+text',
+            type: 'scatter',
+            text: points.map(p => p.word),
+            textposition: 'top center',
+            hovertext: points.map(
+              p => `Cluster ${p.cluster_label}: ${clusterEntitiesByLabel[p.cluster_label] || ''}`
+            ),
+            hoverinfo: 'text',
+            hovertemplate: '%{hovertext}<extra></extra>',
+          }]}
+          layout={{
+            title: 'Semantic Cluster Graph',
+            xaxis: { title: 'TSNE-1', zeroline: false, showgrid: false },
+            yaxis: { title: 'TSNE-2', zeroline: false, showgrid: false },
+            hovermode: 'closest',
+            // smaller right margin now – sidebar is outside the plot
+            margin: { l: 40, r: 20, t: 40, b: 50 },
+            plot_bgcolor: '#fafafc',
+            paper_bgcolor: '#fff',
+          }}
+          config={{ responsive: true }}
+          style={{ width: '100%', height: '100%' }}
+        />
+      </div>
+
+      {/* right: scrollable cluster sidebar */}
+      <div
+        style={{
+          width: 260,
+          marginLeft: 12,
+          maxHeight: '520px',
+          overflowY: 'auto',
+          paddingRight: 4,
+        }}
+      >
+        {summaries.map((s) => (
+          <div
+            key={s.cluster_label}
+            style={{
+              marginBottom: 8,
+              padding: '4px 6px',
+              background: 'rgba(255,255,255,0.95)',
+              border: '1px solid #bbb',
+              borderRadius: 4,
+              fontSize: 13,
+              lineHeight: 1.3,
+              fontFamily: 'monospace',
+              whiteSpace: 'normal',
+            }}
+          >
+            <span
+              style={{
+                fontWeight: 700,
+                color: clusterLabelToColor(s.cluster_label),
+              }}
+            >
+              {`Cluster ${s.cluster_label}: `}
+            </span>
+            <span style={{ color: '#333' }}>
+              {stripClusterPrefix(s.summary)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
-
 function KeynessChooser({ userText, onImage }) {
   const [bFile, setBFile] = useState(null);
   const [loading, setLoading] = useState(false);

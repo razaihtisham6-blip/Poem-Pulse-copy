@@ -216,7 +216,7 @@ def word_cluster(tokens: list[str], return_data: bool = False):
         ax.text(0.5, 0.5, "Not enough unique words", ha="center", va="center")
         ax.axis("off")
         buf = io.BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight", pad_inches=0.6)
         plt.close(fig)
         buf.seek(0)
         b64 = base64.b64encode(buf.read()).decode("ascii")
@@ -232,7 +232,7 @@ def word_cluster(tokens: list[str], return_data: bool = False):
         ax.text(0.5, 0.5, "Too few in-vocab words", ha="center", va="center")
         ax.axis("off")
         buf = io.BytesIO()
-        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight", pad_inches=0.6)
         plt.close(fig)
         buf.seek(0)
         b64 = base64.b64encode(buf.read()).decode("ascii")
@@ -266,14 +266,15 @@ def word_cluster(tokens: list[str], return_data: bool = False):
     point_colors = np.array([color_map[lab] for lab in labels])
 
     # 9A) Create a simple plot (points only) for compact views
-    fig_simple, ax_simple = plt.subplots(figsize=(10, 6), dpi=150)
+    fig_simple, ax_simple = plt.subplots(figsize=(12, 6), dpi=150)
     ax_simple.scatter(X_2d[:, 0], X_2d[:, 1], c=point_colors, s=70, alpha=0.95, linewidths=0, zorder=1)
     handles_simple = [Patch(color=color_map[lab], label=f"Cluster {lab}") for lab in uniq]
-    ax_simple.legend(handles=handles_simple, title=f"KMeans (k={len(uniq)})", bbox_to_anchor=(1.02, 1), loc="upper left")
+    ax_simple.legend(handles=handles_simple, title=f"KMeans (k={len(uniq)})",
+                     bbox_to_anchor=(1.02, 1), loc="upper left")
     ax_simple.set_title("t-SNE Word Clusters", fontsize=16)
     buf_simple = io.BytesIO()
     fig_simple.tight_layout()
-    fig_simple.savefig(buf_simple, format="png", dpi=150, bbox_inches="tight")
+    fig_simple.savefig(buf_simple, format="png", dpi=150, bbox_inches="tight", pad_inches=0.6)
     plt.close(fig_simple)
     buf_simple.seek(0)
     b64_simple = base64.b64encode(buf_simple.read()).decode("ascii")
@@ -310,7 +311,7 @@ def word_cluster(tokens: list[str], return_data: bool = False):
     wrapped_cols, max_rows = _wrap_columns(summary_lines, n_cols)
 
     # Figure sizing scales with #columns and #wrapped lines
-    base_w, base_h = 12, 7
+    base_w, base_h = 14, 7   # wider base width to keep text inside
     extra_w = 3 * max(0, n_cols - 2)
     extra_h = 0.33 * max_rows  # ~0.33" per wrapped row
     fig_w = base_w + extra_w
@@ -358,7 +359,7 @@ def word_cluster(tokens: list[str], return_data: bool = False):
 
     # 12) Return both base64 PNGs
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight")
+    fig.savefig(buf, format="png", dpi=150, bbox_inches="tight", pad_inches=0.6)
     plt.close(fig)
     buf.seek(0)
     b64 = base64.b64encode(buf.read()).decode("ascii")
