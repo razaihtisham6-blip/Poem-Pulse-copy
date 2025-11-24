@@ -306,7 +306,7 @@ function ResultsPage({ results, onBack }) {
                 width: '100%',
                 height: '100%',
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 justifyContent: 'center',
               }}
             >
@@ -314,8 +314,8 @@ function ResultsPage({ results, onBack }) {
                 src={keynessImage}
                 alt="Keyness Chart"
                 style={{
-                  width: '100%',
-                  height: '100%',
+                  width: '60%',
+                  height: 'auto',
                   objectFit: 'contain',
                   borderRadius: 12,
                 }}
